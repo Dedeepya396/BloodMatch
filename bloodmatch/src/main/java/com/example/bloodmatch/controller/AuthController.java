@@ -5,12 +5,16 @@ import com.example.bloodmatch.model.Hospital;
 import com.example.bloodmatch.model.factory.UserFactory;
 import com.example.bloodmatch.repository.DonorRepository;
 import com.example.bloodmatch.repository.HospitalRepository;
+import com.example.bloodmatch.service.BloodRequestService;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.bloodmatch.dto.*;
 import java.time.LocalDate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,6 +23,7 @@ public class AuthController {
     private final DonorRepository donorRepository;
     private final HospitalRepository hospitalRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private static final Logger logger = LoggerFactory.getLogger(BloodRequestService.class);
 
     public AuthController(DonorRepository donorRepository, HospitalRepository hospitalRepository) {
         this.donorRepository = donorRepository;
@@ -29,13 +34,19 @@ public class AuthController {
     public ResponseEntity<?> signup(@RequestBody SignupRequest req) {
         String role = req.getRole();
         String email = req.getEmail();
+        logger.info("Received signup request: role={}, email:{}", role, email);
         if (email == null || req.getPassword() == null) {
+            if (email == null)
+                logger.error("Email is NULL");
+            else
+                logger.error("Password is NULL");
             return ResponseEntity.badRequest().body("Email and password required");
         }
         // if user is donor
         if ("DONOR".equalsIgnoreCase(role)) {
             // if email already exists
             if (donorRepository.findByEmail(email) != null) {
+                logger.error("Donor with email={} already exists", email);
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered as donor");
             }
             String hash = passwordEncoder.encode(req.getPassword());
@@ -48,12 +59,14 @@ public class AuthController {
             // save it to db
             Donor saved = donorRepository.save(donor);
             // sending status code 200 with user id, role, name, email
+            logger.info("New donor with email={} is registered", email);
             return ResponseEntity.ok(new AuthResponse(saved.getId(), "DONOR", saved.getName(), email));
 
         }
         // if user is a hospital
         else if ("HOSPITAL".equalsIgnoreCase(role)) {
             if (hospitalRepository.findByEmail(email) != null) {
+                logger.error("Hospital with email={} already exists", email);
                 return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered as hospital");
             }
             String hash = passwordEncoder.encode(req.getPassword());
@@ -61,9 +74,11 @@ public class AuthController {
             Hospital hospital = UserFactory.createHospital(req.getName(), email, hash, req.getAddress(),
                     req.getLatitude(), req.getLongitude(), req.getContactNumber());
             Hospital saved = hospitalRepository.save(hospital);
+            logger.info("New donor with email={} is registered", email);
             return ResponseEntity.ok(new AuthResponse(saved.getId(), "HOSPITAL", saved.getName(), email));
         }
         // new role
+        logger.error("User with email={} has selected unknown role", email);
         return ResponseEntity.badRequest().body("Unknown role");
     }
 
@@ -71,17 +86,25 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         String email = req.getEmail();
         String pw = req.getPassword();
-        if (email == null || pw == null)
+        logger.info("Received login request: email:{}", email);
+        if (email == null || pw == null) {
+            if (email == null)
+                logger.error("Email is NULL");
+            else
+                logger.error("Password is NULL");
             return ResponseEntity.badRequest().body("Email and password required");
+        }
 
         Donor d = donorRepository.findByEmail(email);
         // check if this mail is registered as donor
         if (d != null) {
             if (passwordEncoder.matches(pw, d.getPasswordHash())) {
                 // login
+                logger.info("Donor is logged into system with email={}", email);
+
                 return ResponseEntity.ok(new AuthResponse(d.getId(), "DONOR", d.getName(), email));
             }
-            System.out.println("AuthController.login()");
+            logger.error("Invalid credentials for donor with email={}", email);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
 
@@ -90,11 +113,13 @@ public class AuthController {
         if (h != null) {
             if (passwordEncoder.matches(pw, h.getPasswordHash())) {
                 // login
+                logger.info("Donor is logged into system with email={}", email);
                 return ResponseEntity.ok(new AuthResponse(h.getId(), "HOSPITAL", h.getName(), email));
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
         // email is present
+        logger.error("Invalid credentials for donor with email={}", email);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
 }
