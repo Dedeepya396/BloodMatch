@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MapPicker from "./MapPicker";
 
 function AddDonor() {
   const [donor, setDonor] = useState({
@@ -38,6 +39,15 @@ function AddDonor() {
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
+
+  const onMapChange = ({ lat, lng, display_name }) => {
+    setDonor({ ...donor, latitude: String(lat), longitude: String(lng) });
+    if (display_name) {
+      // optional: store address if needed
+      setDonor(prev => ({ ...prev, address: display_name }));
+    }
+  };
+
   return (
     <>
       <div className="panel">
@@ -71,7 +81,7 @@ function AddDonor() {
           </div>
 
           <div className="field">
-            <label>Last Donation</label>
+            <label>Last Donation</label>https://nominatim.openstreetmap.org/search?format
             <input
               name="lastDonationDate"
               type="date"
@@ -83,23 +93,12 @@ function AddDonor() {
 
         <div className="divider" />
 
-        <div className="coord-row">
-          <div className="field">
-            <label>Latitude</label>
-            <input
-              name="latitude"
-              value={donor.latitude}
-              placeholder="e.g. 17.3850"
-              onChange={handleChange}
-            />
-          </div>
-          <div className="field">
-            <label>Longitude</label>
-            <input
-              name="longitude"
-              value={donor.longitude}
-              placeholder="e.g. 78.4867"
-              onChange={handleChange}
+        <div className="coord-row" style={{gridTemplateColumns: '1fr'}}>
+          <div className="field span-2">
+            <label>Select location</label>
+            <MapPicker
+              position={donor.latitude && donor.longitude ? [parseFloat(donor.latitude), parseFloat(donor.longitude)] : null}
+              onChange={onMapChange}
             />
           </div>
         </div>

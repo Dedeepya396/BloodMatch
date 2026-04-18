@@ -28,6 +28,15 @@ public class HospitalService {
         return hospitalRepository.save(hospital);
     }
 
+    public Hospital updateAddress(String id, String address, Double latitude, Double longitude) {
+        return hospitalRepository.findById(id).map(h -> {
+            if (address != null) h.setAddress(address);
+            if (latitude != null) h.setLatitude(latitude);
+            if (longitude != null) h.setLongitude(longitude);
+            return hospitalRepository.save(h);
+        }).orElse(null);
+    }
+
     public List<Hospital> getAll() {
         return hospitalRepository.findAll();
     }

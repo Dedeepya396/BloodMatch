@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MapPicker from "./MapPicker";
 
 function BloodRequest() {
   const [request, setRequest] = useState({
@@ -14,9 +15,7 @@ function BloodRequest() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  const handleChange = (e) => {
-    setRequest({ ...request, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setRequest({ ...request, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -40,6 +39,10 @@ function BloodRequest() {
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
+  const onMapChange = ({ lat, lng, display_name }) => {
+    setRequest(prev => ({ ...prev, latitude: String(lat), longitude: String(lng), address: display_name || prev.address }));
+  };
+
   return (
     <div className="panel">
       <div className="panel-header">
@@ -53,38 +56,26 @@ function BloodRequest() {
       <div className="form-grid">
         <div className="field span-2">
           <label>Hospital Name</label>
-          <input
-            name="hospitalName"
-            value={request.hospitalName}
-            placeholder="e.g. Apollo Hospital Jubilee Hills"
-            onChange={handleChange}
-          />
+          <input name="hospitalName" value={request.hospitalName} onChange={handleChange} />
         </div>
 
         <div className="field">
           <label>Blood Group</label>
           <select name="bloodGroupRequired" value={request.bloodGroupRequired} onChange={handleChange}>
             <option value="">Select group</option>
-            {bloodGroups.map(g => (
-              <option key={g} value={g}>{g}</option>
-            ))}
+            {bloodGroups.map(g => <option key={g} value={g}>{g}</option>)}
           </select>
         </div>
 
         <div className="field">
           <label>Units Required</label>
-          <input
-            name="unitsRequired"
-            value={request.unitsRequired}
-            placeholder="e.g. 2"
-            onChange={handleChange}
-          />
+          <input name="unitsRequired" value={request.unitsRequired} onChange={handleChange} />
         </div>
 
         <div className="field">
-          <label>Urgency Level</label>
+          <label>Urgency</label>
           <select name="urgency" value={request.urgency} onChange={handleChange}>
-            <option value="">Select urgency</option>
+            <option value="">Select</option>
             <option value="HIGH">🔴 High</option>
             <option value="LOW">🟡 Low</option>
           </select>
@@ -93,34 +84,19 @@ function BloodRequest() {
 
       <div className="divider" />
 
-      <div className="coord-row">
-        <div className="field">
-          <label>Latitude</label>
-          <input
-            name="latitude"
-            value={request.latitude}
-            placeholder="e.g. 17.3850"
-            onChange={handleChange}
-          />
-        </div>
-        <div className="field">
-          <label>Longitude</label>
-          <input
-            name="longitude"
-            value={request.longitude}
-            placeholder="e.g. 78.4867"
-            onChange={handleChange}
-          />
-        </div>
+      <div className="field span-2">
+        <label>Select location</label>
+        <MapPicker
+          position={request.latitude && request.longitude ? [parseFloat(request.latitude), parseFloat(request.longitude)] : null}
+          onChange={onMapChange}
+        />
       </div>
 
-      <button
-        className="btn btn-red"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? <>⏳ Searching donors…</> : <>🔍 Find Matching Donors</>}
-      </button>
+      <div style={{ marginTop: 12 }}>
+        <button className="btn btn-red" onClick={handleSubmit} disabled={loading}>
+          {loading ? "⏳ Searching donors…" : "🔍 Find Matching Donors"}
+        </button>
+      </div>
 
       {(searched || matches.length > 0) && (
         <>
@@ -130,17 +106,11 @@ function BloodRequest() {
           </div>
 
           {matches.length === 0 ? (
-            <div className="empty-state">
-              No matching donors found nearby.<br />Try expanding the search radius or checking blood group.
-            </div>
+            <div className="empty-state">No matching donors found nearby.<br/>Try expanding the search radius or checking blood group.</div>
           ) : (
             <ul className="matches-list">
               {matches.map((m, index) => (
-                <li
-                  className="match-item"
-                  key={index}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
+                <li className="match-item" key={index} style={{ animationDelay: `${index * 0.05}s` }}>
                   <div>
                     <div className="match-name">{m.donor.name}</div>
                     <div className="match-meta">

@@ -10,6 +10,7 @@ public class Donor extends User {
 
     private double latitude;
     private double longitude;
+    private String address;
 
     private boolean available;
 
@@ -70,6 +71,14 @@ public class Donor extends User {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public String getAddress() {
+        return this.address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public boolean isAvailable() {

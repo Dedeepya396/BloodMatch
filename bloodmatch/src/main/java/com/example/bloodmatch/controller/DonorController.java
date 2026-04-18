@@ -38,4 +38,11 @@ public class DonorController {
     public Donor updateDonor(@PathVariable String id, @RequestBody Donor donor) {
         return donorService.updateDonor(id, donor);
     }
+
+    @PutMapping("/{id}/address")
+    public ResponseEntity<?> updateAddress(@PathVariable String id, @RequestBody com.example.bloodmatch.dto.AddressUpdateRequest req) {
+        Donor updated = donorService.updateAddress(id, req.getAddress(), req.getLatitude(), req.getLongitude());
+        if (updated == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updated);
+    }
 }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MapPicker from "./MapPicker";
 import { useNavigate } from "react-router-dom";
 
 function Signup() {
@@ -7,8 +8,11 @@ function Signup() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
-
     const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+    const onMapChange = ({ lat, lng, display_name }) => {
+        setForm({ ...form, latitude: String(lat), longitude: String(lng), address: display_name || form.address });
+    };
 
     const submit = async () => {
         setLoading(true); setError('');
@@ -88,13 +92,9 @@ function Signup() {
                     </>
                 )}
 
-                <div className="field">
-                    <label>Latitude</label>
-                    <input name="latitude" value={form.latitude} onChange={handleChange} />
-                </div>
-                <div className="field">
-                    <label>Longitude</label>
-                    <input name="longitude" value={form.longitude} onChange={handleChange} />
+                <div className="field span-2">
+                    <label>Select location</label>
+                    <MapPicker position={form.latitude && form.longitude ? [parseFloat(form.latitude), parseFloat(form.longitude)] : null} onChange={onMapChange} />
                 </div>
             </div>
 

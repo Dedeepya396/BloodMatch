@@ -245,4 +245,181 @@ select {
   text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px;
   border: 1px dashed var(--border); border-radius: var(--radius-sm);
 }
+.leaflet-pane                { z-index: 1 !important; }
+.leaflet-tile-pane           { z-index: 1 !important; }
+.leaflet-overlay-pane        { z-index: 2 !important; }
+.leaflet-shadow-pane         { z-index: 3 !important; }
+.leaflet-marker-pane         { z-index: 4 !important; }
+.leaflet-tooltip-pane        { z-index: 5 !important; }
+.leaflet-popup-pane          { z-index: 6 !important; }
+.leaflet-control             { z-index: 7 !important; }
+.leaflet-top, .leaflet-bottom { z-index: 7 !important; }
+.leaflet-map-pane            { z-index: 0 !important; }
 .divider { height: 1px; background: var(--border); margin: 24px 0; }
+/* ── MAP PICKER ── */
+.map-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Search row */
+.map-search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.map-search-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.map-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.map-search-input {
+  width: 100%;
+  padding: 9px 12px 9px 32px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: var(--transition);
+  /* reset margin from global input styles */
+  margin: 0;
+}
+
+.map-search-input::placeholder { color: var(--text-muted); }
+
+.map-search-input:focus {
+  border-color: var(--accent-blue);
+  background: rgba(10, 30, 53, 0.9);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+/* My location button */
+.map-location-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: 'Syne', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: var(--transition);
+  /* override global .btn margin */
+  margin: 0;
+  width: auto;
+}
+
+.map-location-btn:hover {
+  border-color: var(--border-hover);
+  color: var(--accent-bright);
+}
+
+/* Suggestions dropdown */
+.map-suggestions {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  /* sit above the map */
+  position: relative;
+  z-index: 1001;
+}
+
+.map-suggestion-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.map-suggestion-item:last-child { border-bottom: none; }
+
+.map-suggestion-item:hover { background: var(--bg-input); }
+
+.map-suggestion-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.map-suggestion-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* Force Leaflet tiles dark-ish to blend with dark UI */
+.map-container-wrap .leaflet-tile {
+  filter: brightness(0.85) saturate(0.9);
+}
+
+/* Leaflet controls sit above tiles but below modal chrome */
+.map-container-wrap .leaflet-control-container {
+  position: absolute;
+  z-index: 400;
+}
+
+.map-container-wrap {
+  height: 240px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  /* DO NOT put overflow:hidden here — it breaks marker icons */
+}
+
+.location-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 5, 9, 0.85);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;       /* align top so footer is reachable */
+  justify-content: center;
+  padding: 24px 16px;
+  backdrop-filter: blur(4px);
+  overflow-y: auto;              /* overlay itself scrolls */
+}
+
+.location-modal-box {
+  background: linear-gradient(135deg, var(--bg-panel) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  animation: fadeUp 0.25s ease both;
+  /* NO overflow:hidden, NO max-height — let content define height */
+  flex-shrink: 0;
+}

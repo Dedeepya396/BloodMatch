@@ -32,6 +32,13 @@ public class HospitalController {
         return hospitalService.updateHospital(id, hospital);
     }
 
+    @PutMapping("/{id}/address")
+    public ResponseEntity<?> updateAddress(@PathVariable String id, @RequestBody com.example.bloodmatch.dto.AddressUpdateRequest req) {
+        Hospital updated = hospitalService.updateAddress(id, req.getAddress(), req.getLatitude(), req.getLongitude());
+        if (updated == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(updated);
+    }
+
     @GetMapping
     public List<Hospital> getAll() {
         return hospitalService.getAll();

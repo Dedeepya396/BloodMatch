@@ -33,4 +33,13 @@ public class DonorService {
         donor.setId(id);
         return donorRepository.save(donor);
     }
+
+    public Donor updateAddress(String id, String address, Double latitude, Double longitude) {
+        return donorRepository.findById(id).map(d -> {
+            if (address != null) d.setAddress(address);
+            if (latitude != null) d.setLatitude(latitude);
+            if (longitude != null) d.setLongitude(longitude);
+            return donorRepository.save(d);
+        }).orElse(null);
+    }
 }
