@@ -5,6 +5,10 @@ import com.example.bloodmatch.repository.DonorRepository;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.LocalDate;
+import com.example.bloodmatch.dto.DonationRequest;
+import com.example.bloodmatch.model.BloodPacket;
+import com.example.bloodmatch.repository.BloodPacketRepository;
 
 import java.util.List;
 
@@ -12,10 +16,12 @@ import java.util.List;
 public class DonorService {
 
     private final DonorRepository donorRepository;
+    private final BloodPacketRepository bloodPacketRepository;
     private static final Logger logger = LoggerFactory.getLogger(DonorService.class);
 
-    public DonorService(DonorRepository donorRepository) {
+    public DonorService(DonorRepository donorRepository, BloodPacketRepository bloodPacketRepository) {
         this.donorRepository = donorRepository;
+        this.bloodPacketRepository = bloodPacketRepository;
     }
 
     // Save donor
@@ -83,5 +89,37 @@ public class DonorService {
             return null;
         });
 
+    }
+
+    public Donor donateBlood(String id, DonationRequest req) throws Exception {
+        Donor donor = donorRepository.findById(id).orElseThrow(() -> new Exception("Donor not found"));
+
+        // Check 3 month gap
+        if (donor.getLastDonationDate() != null) {
+            LocalDate nextEligible = donor.getLastDonationDate().plusMonths(3);
+            if (req.getDonationDate().isBefore(nextEligible)) {
+                throw new Exception("You can only donate every 3 months. Next eligibility: " + nextEligible);
+            }
+        }
+
+        // 1. Update Donor's last donation date
+        donor.setLastDonationDate(req.getDonationDate());
+        donorRepository.save(donor);
+
+        // 2. Add blood packet to blood bank inventory
+        BloodPacket packet = new BloodPacket();
+        packet.setBloodBankId(req.getBloodBankId());
+        packet.setBloodGroup(donor.getBloodGroup());
+        packet.setUnits(req.getUnits());
+        packet.setCollectedDate(req.getDonationDate());
+        
+        // Expiry is +42 days
+        packet.setExpiryDate(req.getDonationDate().plusDays(42));
+        packet.setStatus("AVAILABLE");
+
+        bloodPacketRepository.save(packet);
+
+        logger.info("Donation processed for donorId={}, bankId={}, units={}", id, req.getBloodBankId(), req.getUnits());
+        return donor;
     }
 }

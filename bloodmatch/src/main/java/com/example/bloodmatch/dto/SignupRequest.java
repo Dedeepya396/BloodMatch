@@ -17,6 +17,9 @@ public class SignupRequest {
     private String address;
     private String contactNumber;
 
+    // blood bank fields
+    private String licenseNumber;
+
     public SignupRequest() {
     }
 
@@ -107,5 +110,13 @@ public class SignupRequest {
 
     public void setContactNumber(String contactNumber) {
         this.contactNumber = contactNumber;
+    }
+
+    public String getLicenseNumber() {
+        return licenseNumber;
+    }
+
+    public void setLicenseNumber(String licenseNumber) {
+        this.licenseNumber = licenseNumber;
     }
 }

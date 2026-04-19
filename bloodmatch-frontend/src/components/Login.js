@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ role: 'DONOR', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -24,6 +24,7 @@ function Login() {
       localStorage.setItem('bm_auth', JSON.stringify({ id: data.id, role: data.role, name: data.name, email: data.email }));
       if (data.role === 'DONOR') navigate('/profile');
       else if (data.role === 'HOSPITAL') navigate('/request');
+      else if (data.role === 'BLOOD_BANK') navigate('/blood-bank-dashboard');
       else navigate('/');
     } catch (err) { 
         console.log(err);
@@ -43,6 +44,26 @@ function Login() {
 
       <div className="form-grid full">
         <div className="field">
+          <div className="role-selector" style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
+            {['DONOR', 'HOSPITAL', 'BLOOD_BANK'].map(r => (
+              <button
+                key={r}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, role: r }))}
+                style={{
+                  flex: 1, padding: "10px", borderRadius: 8, cursor: "pointer", fontWeight: 600,
+                  background: form.role === r ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.05)",
+                  color: form.role === r ? "#60a5fa" : "#94a3b8",
+                  border: form.role === r ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.1)",
+                  transition: "all 0.2s"
+                }}
+              >
+                {r.replace('_', ' ')}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="field">
           <label>Email</label>
           <input name="email" value={form.email} onChange={handleChange} />
         </div>
@@ -55,7 +76,7 @@ function Login() {
       {error && <div style={{color:'#fb7185', marginTop:8}}>{error}</div>}
 
       <button className="btn btn-blue" onClick={submit} disabled={loading}>
-        {loading ? 'Signing in…' : 'Sign In'}
+        {loading ? 'Signing in…' : `Sign In as ${form.role.replace('_', ' ')}`}
       </button>
     </div>
   );

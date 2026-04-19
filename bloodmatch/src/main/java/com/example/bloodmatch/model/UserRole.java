@@ -3,5 +3,6 @@ package com.example.bloodmatch.model;
 public enum UserRole {
     DONOR,
     HOSPITAL,
-    ADMIN
+    ADMIN,
+    BLOOD_BANK
 }

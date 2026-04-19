@@ -55,4 +55,14 @@ public class DonorController {
             return ResponseEntity.notFound().build();
         return ResponseEntity.ok(updated);
     }
+    @PostMapping("/{id}/donate")
+    public ResponseEntity<?> donate(@PathVariable String id, @RequestBody com.example.bloodmatch.dto.DonationRequest req) {
+        logger.info("Received a request for blood donation from donor with id: {}", id);
+        try {
+            Donor updated = donorService.donateBlood(id, req);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

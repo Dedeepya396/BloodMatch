@@ -5,6 +5,7 @@ import BloodRequest from "./components/BloodRequest";
 import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Profile from "./components/Profile";
+import BloodBankDashboard from "./components/BloodBankDashboard";
 // removed ProtectedRoute - simplified auth flow
 import "./index.css";
 function Layout() {
@@ -42,8 +43,8 @@ function Layout() {
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
           {!auth ? (
             <>
-              <button className="btn" onClick={() => window.location.href = '/login'} style={{ width: 'auto', padding: '8px 12px' }}>Sign In</button>
-              <button className="btn btn-blue" onClick={() => window.location.href = '/signup'} style={{ width: 'auto', padding: '8px 12px' }}>Sign Up</button>
+              <button className={`btn ${location.pathname === '/login' ? 'btn-blue' : ''}`} onClick={() => window.location.href = '/login'} style={{ width: 'auto', padding: '8px 12px' }}>Sign In</button>
+              <button className={`btn ${location.pathname === '/signup' ? 'btn-blue' : ''}`} onClick={() => window.location.href = '/signup'} style={{ width: 'auto', padding: '8px 12px' }}>Sign Up</button>
             </>
           ) : (
             <>
@@ -75,6 +76,7 @@ function Layout() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/blood-bank-dashboard" element={<BloodBankDashboard />} />
         </Routes>
       </main>
     </div>

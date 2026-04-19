@@ -1,8 +1,10 @@
 package com.example.bloodmatch.controller;
 
+import com.example.bloodmatch.model.BloodBank;
 import com.example.bloodmatch.model.Donor;
 import com.example.bloodmatch.model.Hospital;
 import com.example.bloodmatch.model.factory.UserFactory;
+import com.example.bloodmatch.repository.BloodBankRepository;
 import com.example.bloodmatch.repository.DonorRepository;
 import com.example.bloodmatch.repository.HospitalRepository;
 import com.example.bloodmatch.service.BloodRequestService;
@@ -22,12 +24,16 @@ public class AuthController {
 
     private final DonorRepository donorRepository;
     private final HospitalRepository hospitalRepository;
+    private final BloodBankRepository bloodBankRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     private static final Logger logger = LoggerFactory.getLogger(BloodRequestService.class);
 
-    public AuthController(DonorRepository donorRepository, HospitalRepository hospitalRepository) {
+    public AuthController(DonorRepository donorRepository,
+                          HospitalRepository hospitalRepository,
+                          BloodBankRepository bloodBankRepository) {
         this.donorRepository = donorRepository;
         this.hospitalRepository = hospitalRepository;
+        this.bloodBankRepository = bloodBankRepository;
     }
 
     @PostMapping("/signup")
@@ -74,10 +80,23 @@ public class AuthController {
             Hospital hospital = UserFactory.createHospital(req.getName(), email, hash, req.getAddress(),
                     req.getLatitude(), req.getLongitude(), req.getContactNumber());
             Hospital saved = hospitalRepository.save(hospital);
-            logger.info("New donor with email={} is registered", email);
+            logger.info("New hospital with email={} is registered", email);
             return ResponseEntity.ok(new AuthResponse(saved.getId(), "HOSPITAL", saved.getName(), email));
         }
-        // new role
+        // if user is a blood bank
+        else if ("BLOOD_BANK".equalsIgnoreCase(role)) {
+            if (bloodBankRepository.findByEmail(email) != null) {
+                logger.error("Blood Bank with email={} already exists", email);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already registered as blood bank");
+            }
+            String hash = passwordEncoder.encode(req.getPassword());
+            BloodBank bloodBank = UserFactory.createBloodBank(req.getName(), email, hash,
+                    req.getAddress(), req.getContactNumber(), req.getLatitude(), req.getLongitude());
+            BloodBank saved = bloodBankRepository.save(bloodBank);
+            logger.info("New blood bank with email={} is registered", email);
+            return ResponseEntity.ok(new AuthResponse(saved.getId(), "BLOOD_BANK", saved.getName(), email));
+        }
+        // unknown role
         logger.error("User with email={} has selected unknown role", email);
         return ResponseEntity.badRequest().body("Unknown role");
     }
@@ -95,31 +114,42 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email and password required");
         }
 
-        Donor d = donorRepository.findByEmail(email);
-        // check if this mail is registered as donor
-        if (d != null) {
-            if (passwordEncoder.matches(pw, d.getPasswordHash())) {
-                // login
-                logger.info("Donor is logged into system with email={}", email);
-
-                return ResponseEntity.ok(new AuthResponse(d.getId(), "DONOR", d.getName(), email));
-            }
-            logger.error("Invalid credentials for donor with email={}", email);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        String role = req.getRole();
+        if (role == null || role.isEmpty()) {
+            return ResponseEntity.badRequest().body("Role selection is required for login");
         }
 
-        Hospital h = hospitalRepository.findByEmail(email);
-        // check if mail is registered as hospital
-        if (h != null) {
-            if (passwordEncoder.matches(pw, h.getPasswordHash())) {
-                // login
-                logger.info("Donor is logged into system with email={}", email);
-                return ResponseEntity.ok(new AuthResponse(h.getId(), "HOSPITAL", h.getName(), email));
+        if ("DONOR".equalsIgnoreCase(role)) {
+            Donor d = donorRepository.findByEmail(email);
+            if (d != null) {
+                if (passwordEncoder.matches(pw, d.getPasswordHash())) {
+                    logger.info("Donor logged into system with email={}", email);
+                    return ResponseEntity.ok(new AuthResponse(d.getId(), "DONOR", d.getName(), email));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
             }
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        } else if ("HOSPITAL".equalsIgnoreCase(role)) {
+            Hospital h = hospitalRepository.findByEmail(email);
+            if (h != null) {
+                if (passwordEncoder.matches(pw, h.getPasswordHash())) {
+                    logger.info("Hospital logged into system with email={}", email);
+                    return ResponseEntity.ok(new AuthResponse(h.getId(), "HOSPITAL", h.getName(), email));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            }
+        } else if ("BLOOD_BANK".equalsIgnoreCase(role)) {
+            BloodBank bb = bloodBankRepository.findByEmail(email);
+            if (bb != null) {
+                if (passwordEncoder.matches(pw, bb.getPasswordHash())) {
+                    logger.info("Blood Bank logged into system with email={}", email);
+                    return ResponseEntity.ok(new AuthResponse(bb.getId(), "BLOOD_BANK", bb.getName(), email));
+                }
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            }
         }
-        // email is present
-        logger.error("Invalid credentials for donor with email={}", email);
+
+        // email not found in any collection
+        logger.error("User not found for email={}", email);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
     }
 }

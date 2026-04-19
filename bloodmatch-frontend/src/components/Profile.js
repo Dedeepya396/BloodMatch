@@ -6,6 +6,9 @@ function Profile() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [bloodBanks, setBloodBanks] = useState([]);
+  const [showDonateForm, setShowDonateForm] = useState(false);
+  const [donationForm, setDonationForm] = useState({ bloodBankId: '', units: 1, donationDate: new Date().toISOString().split('T')[0] });
 
   useEffect(() => {
     const raw = localStorage.getItem('bm_auth');
@@ -13,7 +16,15 @@ function Profile() {
     const parsed = JSON.parse(raw);
     setAuth(parsed);
     fetchProfile(parsed);
+    if (parsed.role === 'DONOR') fetchBloodBanks();
   }, []);
+
+  const fetchBloodBanks = async () => {
+    try {
+      const res = await fetch('http://localhost:8080/api/bloodbank');
+      if (res.ok) setBloodBanks(await res.json());
+    } catch (err) { console.error(err); }
+  };
 
   const fetchProfile = async (parsed) => {
     setLoading(true);
@@ -23,6 +34,9 @@ function Profile() {
         const obj = await res.json(); setData(obj);
       } else if (parsed.role === 'HOSPITAL') {
         const res = await fetch(`http://localhost:8080/api/hospitals/by-email?email=${encodeURIComponent(parsed.email)}`);
+        const obj = await res.json(); setData(obj);
+      } else if (parsed.role === 'BLOOD_BANK') {
+        const res = await fetch(`http://localhost:8080/api/bloodbank/by-email?email=${encodeURIComponent(parsed.email)}`);
         const obj = await res.json(); setData(obj);
       }
     } catch (err) { console.error(err); }
@@ -57,7 +71,9 @@ function Profile() {
         longitude: Number(tempLocation.lng)
       };
 
-      const base = auth.role === 'DONOR' ? 'http://localhost:8080/api/donors' : 'http://localhost:8080/api/hospitals';
+      const base = auth.role === 'DONOR' ? 'http://localhost:8080/api/donors' 
+                   : auth.role === 'HOSPITAL' ? 'http://localhost:8080/api/hospitals'
+                   : 'http://localhost:8080/api/bloodbank';
       const res = await fetch(`${base}/${data.id}/address`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -86,12 +102,37 @@ function Profile() {
       const headers = { 'Content-Type':'application/json' };
       if (auth.role === 'DONOR') {
         await fetch(`http://localhost:8080/api/donors/${data.id}`, { method:'PUT', headers, body: JSON.stringify(data) });
-      } else {
+      } else if (auth.role === 'HOSPITAL') {
         await fetch(`http://localhost:8080/api/hospitals/${data.id}`, { method:'PUT', headers, body: JSON.stringify(data) });
+      } else if (auth.role === 'BLOOD_BANK') {
+        await fetch(`http://localhost:8080/api/bloodbank/${data.id}`, { method:'PUT', headers, body: JSON.stringify(data) });
       }
       setMessage('Saved');
       setTimeout(() => setMessage(''), 2500);
     } catch (err) { setMessage('Save failed'); }
+    finally { setLoading(false); }
+  };
+
+  const handleDonate = async () => {
+    if (!donationForm.bloodBankId) { setMessage('Please select a blood bank'); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:8080/api/donors/${data.id}/donate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(donationForm)
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setData(updated);
+        setMessage('Donation successful! Your contribution is added.');
+        setShowDonateForm(false);
+        setTimeout(() => setMessage(''), 5000);
+      } else {
+        const err = await res.text();
+        setMessage('Donation failed: ' + err);
+      }
+    } catch (err) { setMessage('Network error'); }
     finally { setLoading(false); }
   };
 
@@ -111,9 +152,14 @@ function Profile() {
 
       {data && (
         <div className="form-grid full">
-          <div className="field">
+          <div className="field span-2">
             <label>Full name</label>
             <input name="name" value={data.name||''} onChange={handleChange} />
+          </div>
+
+          <div className="field">
+            <label>Email Address</label>
+            <input name="email" value={data.email||auth.email||''} readOnly style={{ opacity: 0.7, cursor: "not-allowed" }} />
           </div>
 
           {auth.role === 'DONOR' ? (
@@ -128,16 +174,10 @@ function Profile() {
               </div>
             </>
           ) : (
-            <>
-              <div className="field">
-                <label>Address</label>
-                <input name="address" value={data.address||''} onChange={handleChange} />
-              </div>
-              <div className="field">
-                <label>Contact Number</label>
-                <input name="contactNumber" value={data.contactNumber||''} onChange={handleChange} />
-              </div>
-            </>
+            <div className="field">
+              <label>Contact Number</label>
+              <input name="contactNumber" value={data.contactNumber||''} onChange={handleChange} />
+            </div>
           )}
 
           <div className="field span-2">
@@ -151,10 +191,50 @@ function Profile() {
         </div>
       )}
 
-      <div style={{display:'flex', gap:12}}>
+      <div style={{display:'flex', gap:12, marginTop: 20}}>
         <button className="btn btn-blue" onClick={save} disabled={loading}>Save Profile</button>
         {auth.role === 'HOSPITAL' && <button className="btn btn-red" onClick={() => window.location.href = '/request'}>Add Blood Request</button>}
+        {auth.role === 'DONOR' && <button className="btn btn-red" onClick={() => setShowDonateForm(!showDonateForm)}>{showDonateForm ? 'Cancel Donation' : 'Donate Blood'}</button>}
       </div>
+
+      {showDonateForm && auth.role === 'DONOR' && (
+        <div style={{ marginTop: 24, padding: 20, border: '1px solid var(--border)', borderRadius: 12, background: 'rgba(255,255,255,0.02)' }}>
+          <h3 style={{ margin: '0 0 16px', color: '#f87171' }}>Register Your Donation</h3>
+          <div className="form-grid">
+            <div className="field">
+              <label>Select Blood Bank</label>
+              <select 
+                value={donationForm.bloodBankId} 
+                onChange={e => setDonationForm({ ...donationForm, bloodBankId: e.target.value })}
+                style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, padding: 10, color: 'white', width: '100%' }}
+              >
+                <option value="">-- Choose Blood Bank --</option>
+                {bloodBanks.map(bb => {
+                  const parts = (bb.address || "").split(',').map(s => s.trim());
+                  const pincode = parts.find(p => /\b\d{6}\b/.test(p)) || "";
+                  const city = parts.length > 4 ? parts[parts.length - 5] : parts.length > 2 ? parts[parts.length - 3] : parts[0];
+                  return (
+                    <option key={bb.id} value={bb.id}>
+                      {bb.name} ({city}{city && pincode ? ', ' : ''}{pincode})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div className="field">
+              <label>Units Donated</label>
+              <input type="number" min="1" value={donationForm.units} onChange={e => setDonationForm({ ...donationForm, units: parseInt(e.target.value) })} />
+            </div>
+            <div className="field">
+              <label>Donation Date</label>
+              <input type="date" value={donationForm.donationDate} onChange={e => setDonationForm({ ...donationForm, donationDate: e.target.value })} max={new Date().toISOString().split('T')[0]} />
+            </div>
+            <div className="field" style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button className="btn btn-red" onClick={handleDonate} disabled={loading} style={{ width: '100%' }}>Confirm Donation</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {message && <div style={{marginTop:10}}>{message}</div>}
 
