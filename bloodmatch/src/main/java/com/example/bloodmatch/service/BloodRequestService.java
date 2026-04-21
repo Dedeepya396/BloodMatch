@@ -4,6 +4,7 @@ import com.example.bloodmatch.model.BloodRequest;
 import com.example.bloodmatch.repository.BloodRequestRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,11 +16,17 @@ public class BloodRequestService {
 
     private final BloodRequestRepository requestRepository;
 
+    @Autowired
+    private EmergencyDonorAlertService emergencyDonorAlertService;
+
     public BloodRequestService(BloodRequestRepository requestRepository) {
         this.requestRepository = requestRepository;
     }
 
-    // Save request
+    /**
+     * Save a blood request and, if no blood of the requested group is
+     * available anywhere in the network, trigger an emergency donor alert.
+     */
     public BloodRequest saveRequest(BloodRequest request) {
 
         logger.info("Creating blood request: userId={}, bloodGroup={}, urgency={}",
@@ -28,6 +35,15 @@ public class BloodRequestService {
         BloodRequest saved = requestRepository.save(request);
 
         logger.info("Blood request saved successfully with id={}", saved.getId());
+
+        // --- Type-2 Notification: Emergency donor alert ---
+        // Check across ALL blood banks whether stock of the requested blood group
+        // is zero. If it is, notify nearby eligible donors automatically.
+        try {
+            emergencyDonorAlertService.triggerIfNetworkStockEmpty(saved);
+        } catch (Exception ex) {
+            logger.error("Emergency alert check failed for requestId={}: {}", saved.getId(), ex.getMessage(), ex);
+        }
 
         return saved;
     }

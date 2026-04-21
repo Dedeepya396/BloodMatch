@@ -20,4 +20,11 @@ public interface BloodPacketRepository extends MongoRepository<BloodPacket, Stri
 
     /** Packets filtered by blood bank, blood group, and status */
     List<BloodPacket> findByBloodBankIdAndBloodGroupAndStatus(String bloodBankId, String bloodGroup, String status);
+
+    /**
+     * Count of AVAILABLE packets of a given blood group across ALL blood banks.
+     * Used by EmergencyDonorAlertService to detect a network-wide zero-stock condition.
+     */
+    long countByBloodGroupAndStatus(String bloodGroup, String status);
 }
+
