@@ -1,32 +1,37 @@
 package com.example.bloodmatch.controller;
 
-import com.example.bloodmatch.dto.DonorResponse;
+import com.example.bloodmatch.dto.MatchResponse;
 import com.example.bloodmatch.model.BloodRequest;
 // import com.example.bloodmatch.model.Donor;
 import com.example.bloodmatch.service.BloodRequestService;
+import com.example.bloodmatch.service.BankRequestService;
+import com.example.bloodmatch.dto.HospitalRequestStatus;
 import org.springframework.web.bind.annotation.*;
 import com.example.bloodmatch.service.MatchingService;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/requests")
-
 public class BloodRequestController {
 
     private final BloodRequestService requestService;
     private final MatchingService matchingService;
+    private final BankRequestService bankRequestService;
     private static final Logger logger = LoggerFactory.getLogger(BloodRequestService.class);
 
-    public BloodRequestController(BloodRequestService requestService, MatchingService matchingService) {
+    public BloodRequestController(BloodRequestService requestService, MatchingService matchingService,
+            BankRequestService bankRequestService) {
         this.requestService = requestService;
         this.matchingService = matchingService;
+        this.bankRequestService = bankRequestService;
     }
 
     // 1. Create blood request
     @PostMapping("/match")
-    public List<DonorResponse> createRequestAndMatch(@RequestBody BloodRequest request) {
+    public List<MatchResponse> createRequestAndMatch(@RequestBody BloodRequest request) {
         logger.info("Received a blood request with id:{}, hospital name: {}, required blood group: {}", request.getId(),
                 request.getHospitalName(), request.getBloodGroupRequired());
         requestService.saveRequest(request);
@@ -39,5 +44,31 @@ public class BloodRequestController {
         logger.info("Received a request to get all blood requests.");
 
         return requestService.getAllRequests();
+    }
+
+    // 3. Get requests for a hospital with allocation summary
+    @GetMapping("/hospital/{hospitalName}")
+    public List<HospitalRequestStatus> getRequestsForHospital(@PathVariable String hospitalName) {
+        List<BloodRequest> reqs = requestService.getAllRequests().stream()
+                .filter(r -> hospitalName != null && hospitalName.equals(r.getHospitalName()))
+                .collect(Collectors.toList());
+
+        List<HospitalRequestStatus> out = new java.util.ArrayList<>();
+        for (BloodRequest r : reqs) {
+            int remaining = r.getUnitsRequired();
+            if (remaining <= 0) {
+                continue;
+            }
+            int allocated = bankRequestService.findByBloodRequestId(r.getId())
+                    .stream()
+                    .mapToInt(b -> b.getAllocatedUnits())
+                    .sum();
+            int total = remaining + allocated;
+            logger.info("Remaining for: {}", remaining);
+            out.add(new HospitalRequestStatus(r.getId(), r.getBloodGroupRequired(), total, allocated, remaining,
+                    r.getCreatedAt()));
+        }
+        logger.info("Returning {} requests", out.size());
+        return out;
     }
 }

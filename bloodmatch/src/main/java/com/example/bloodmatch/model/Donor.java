@@ -1,11 +1,11 @@
 package com.example.bloodmatch.model;
 
 import org.springframework.data.mongodb.core.mapping.Document;
-
+import com.example.bloodmatch.model.BloodSupply;
 import java.time.LocalDate;
 
 @Document(collection = "donors")
-public class Donor extends User {
+public class Donor extends User implements BloodSupply {
     private String bloodGroup;
 
     private double latitude;

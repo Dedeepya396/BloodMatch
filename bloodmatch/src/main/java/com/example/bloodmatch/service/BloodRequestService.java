@@ -48,6 +48,16 @@ public class BloodRequestService {
         return saved;
     }
 
+    public int reduceUnits(String requestId, int unitsAllocated) {
+        return requestRepository.findById(requestId).map(r -> {
+            int remaining = Math.max(0, r.getUnitsRequired() - unitsAllocated);
+            r.setUnitsRequired(remaining);
+            requestRepository.save(r);
+            logger.info("Reduced units for request {}: allocated={}, remaining={}", requestId, unitsAllocated, remaining);
+            return remaining;
+        }).orElse(-1);
+    }
+
     // Get all requests
     public List<BloodRequest> getAllRequests() {
 
@@ -59,4 +69,5 @@ public class BloodRequestService {
 
         return requests;
     }
+    
 }

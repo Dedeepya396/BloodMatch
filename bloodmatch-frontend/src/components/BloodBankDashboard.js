@@ -90,6 +90,7 @@ function BloodBankDashboard() {
   const [toast, setToast] = useState("");
   const [showDonated, setShowDonated] = useState(false);
   const [donatedPackets, setDonatedPackets] = useState([]);
+  const [bankRequests, setBankRequests] = useState([]);
   const [allocateForm, setAllocateForm] = useState({ bloodGroup: "A+", units: "" });
   const [allocateLoading, setAllocateLoading] = useState(false);
 
@@ -109,9 +110,17 @@ function BloodBankDashboard() {
     } finally { setLoading(false); }
   }, []);
 
+  const fetchBankRequests = useCallback(async (bankId) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/bank-requests/bank/${bankId}`);
+      if (res.ok) setBankRequests(await res.json());
+    } catch (e) { }
+  }, []);
+
   useEffect(() => {
     if (auth) fetchPackets(auth.id);
-  }, [auth, fetchPackets]);
+    if (auth) fetchBankRequests(auth.id);
+  }, [auth, fetchPackets, fetchBankRequests]);
 
   const fetchExpired = async () => {
     const res = await fetch(`${API}/packets/${auth.id}/expired`);
@@ -146,6 +155,7 @@ function BloodBankDashboard() {
         }
         setAllocateForm(f => ({ ...f, units: "" }));
         fetchPackets(auth.id);
+        fetchBankRequests(auth.id);
         if (showDonated) fetchDonated();
       } else {
         const err = await res.text();
@@ -156,6 +166,19 @@ function BloodBankDashboard() {
     } finally {
       setAllocateLoading(false);
     }
+  };
+
+  const handleBankAction = async (id, action) => {
+    try {
+      const res = await fetch(`http://localhost:8080/api/bank-requests/${id}/${action}`, { method: 'PATCH' });
+      if (res.ok) {
+        showToast(action === 'accept' ? 'Request accepted' : 'Request rejected');
+        fetchBankRequests(auth.id);
+        fetchPackets(auth.id);
+      } else {
+        const t = await res.text(); showToast('Action failed: ' + t);
+      }
+    } catch (e) { showToast('Network error'); }
   };
 
   const handleAdd = async () => {
@@ -314,6 +337,44 @@ function BloodBankDashboard() {
         </div>
       </div>
 
+      {/* Incoming Bank Requests (visible) */}
+      <div className="panel" style={{ marginBottom: 18 }}>
+        <div className="panel-header">
+          <div className="panel-icon" style={{ background: "rgba(255,255,255,0.04)", color: "#fff" }}>📨</div>
+          <div>
+            <div className="panel-title">Incoming Hospital Requests</div>
+            <div className="panel-desc">Requests assigned to your bank — accept to allocate</div>
+          </div>
+        </div>
+
+        <div style={{ padding: 12 }}>
+          {bankRequests.length === 0 ? (
+            <div style={{ color: '#7a9bbf' }}>No incoming requests.</div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {bankRequests.map(r => (
+                <li key={r.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: 12, borderRadius: 10, marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{r.hospitalName} · {r.bloodGroup} · {r.unitsRequested} units</div>
+                    <div style={{ color: '#94a3b8', fontSize: 13 }}>Requested at: {new Date(r.createdAt).toLocaleString()}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {r.status === 'PENDING' ? (
+                      <>
+                        <button onClick={() => handleBankAction(r.id, 'accept')} style={{ background: '#22c55e', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 8 }}>Accept</button>
+                        <button onClick={() => handleBankAction(r.id, 'reject')} style={{ background: 'transparent', color: '#f87171', border: '1px solid rgba(248,113,113,0.12)', padding: '8px 12px', borderRadius: 8 }}>Reject</button>
+                      </>
+                    ) : (
+                      <div style={{ color: '#94a3b8', fontWeight: 700 }}>{r.status}</div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
       {/* ── Add Packet Form Panel ── */}
       {showAddForm && (
         <div className="panel" style={{ marginBottom: 24, animation: "slideIn 0.2s ease" }}>
@@ -421,6 +482,8 @@ function BloodBankDashboard() {
               </table>
             </div>
           )}
+        
+          {/* Incoming Bank Requests (moved to top) */}
         </div>
       )}
 

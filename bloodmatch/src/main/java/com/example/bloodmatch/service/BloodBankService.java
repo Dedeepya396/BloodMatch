@@ -141,6 +141,15 @@ public class BloodBankService {
         return allocationRecordRepository.findByBloodBankId(bankId);
     }
 
+    /**
+     * Returns total AVAILABLE units for a given blood group at a bank.
+     */
+    public int getAvailableUnits(String bankId, String bloodGroup) {
+        List<BloodPacket> packets = packetRepository.findByBloodBankIdAndBloodGroupAndStatus(bankId, bloodGroup, "AVAILABLE");
+        packets = refreshExpiredStatus(packets);
+        return packets.stream().mapToInt(BloodPacket::getUnits).sum();
+    }
+
     private List<BloodPacket> refreshExpiredStatus(List<BloodPacket> packets) {
         LocalDate today = LocalDate.now();
         packets.forEach(p -> {
