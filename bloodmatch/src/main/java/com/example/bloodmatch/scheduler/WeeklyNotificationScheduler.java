@@ -15,7 +15,7 @@ public class WeeklyNotificationScheduler {
     private EligibilityService eligibilityService;
 
     // Cron expression for Tuesday at 4:36 PM
-    @Scheduled(cron = "0 54 16 * * TUE")
+    @Scheduled(cron = "0 0 10 * * MON")
     public void runWeeklyEligibilityCheck() {
         System.out.println("Starting scheduled weekly eligibility check...");
         eligibilityService.checkEligibilityAndNotify();
