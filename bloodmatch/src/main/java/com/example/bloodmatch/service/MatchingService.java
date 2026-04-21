@@ -50,41 +50,6 @@ public class MatchingService {
         double reqLat = request.getLatitude();
         double reqLon = request.getLongitude();
         String reqGroup = request.getBloodGroupRequired();
-
-        // if ("HIGH".equalsIgnoreCase(request.getUrgency())) {
-        // List<BloodBank> allBanks = bloodBankService.getAllBloodBanks();
-        // List<MatchResponse> bankMatches = allBanks.stream()
-        // .filter(bb -> {
-        // double dist = com.example.bloodmatch.util.DistanceUtil.calculate(
-        // bb.getLatitude(), bb.getLongitude(), reqLat, reqLon);
-        // if (dist > 20.0) return false;
-        // // check if bank has any AVAILABLE packets of the requested group
-        // List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bb.getId(),
-        // reqGroup);
-        // return packets.stream().anyMatch(p -> "AVAILABLE".equals(p.getStatus()) &&
-        // p.getUnits() > 0);
-        // })
-        // .map(bb -> {
-        // double distance = com.example.bloodmatch.util.DistanceUtil.calculate(
-        // bb.getLatitude(), bb.getLongitude(), reqLat, reqLon);
-        // List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bb.getId(),
-        // reqGroup);
-        // int available = packets.stream().filter(p ->
-        // "AVAILABLE".equals(p.getStatus())).mapToInt(BloodPacket::getUnits).sum();
-        // return new MatchResponse(bb.getId(), bb.getName(), reqGroup,
-        // bb.getLatitude(), bb.getLongitude(), distance,
-        // available, bb.getContactNumber());
-        // })
-        // .collect(Collectors.toList());
-
-        // if (!bankMatches.isEmpty()) {
-        // logger.info("Found {} blood banks within 20km for requestId={}",
-        // bankMatches.size(), request.getId());
-        // // Notify donors is skipped for bank matches since banks will be contacted
-        // via allocation API.
-        // return bankMatches;
-        // }
-        // }
         List<BloodBank> allBanks = bloodBankService.getAllBloodBanks();
         List<MatchResponse> bankMatches;
         logger.info("TOTAL BANKS FOUND = {}", allBanks.size());
