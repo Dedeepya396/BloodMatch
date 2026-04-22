@@ -42,10 +42,11 @@ public class EligibilityService {
         for (Donor donor : eligibleDonors) {
             String subject = "Ready to save a life again? - BloodMatch";
             String messageText = String.format(
-                "Hello %s,\n\nIt has been more than 90 days since your last donation (or you are a new potential donor). " +
-                "You are now eligible to donate blood again! Your contribution can make a huge difference.\n\n" +
-                "Please visit your nearest blood bank or check the app for active requests.\n\n" +
-                "Thank you,\nBloodMatch Team", 
+                "Hello <strong>%s</strong>,<br><br>" +
+                "It has been more than <strong>90 days</strong> since your last donation (or you are a new potential donor). " +
+                "You are now eligible to donate blood again! Your contribution can make a huge difference.<br><br>" +
+                "Please visit your nearest blood bank or check the app for active requests.<br><br>" +
+                "Thank you,<br><strong>BloodMatch Team</strong>", 
                 donor.getName()
             );
             

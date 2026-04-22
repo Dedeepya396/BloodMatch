@@ -32,18 +32,13 @@ public class HospitalService {
     }
 
     public Hospital findByEmail(String email) {
-
         logger.info("Searching hospital by email={}", email);
+        return hospitalRepository.findByEmail(email);
+    }
 
-        Hospital hospital = hospitalRepository.findByEmail(email);
-
-        if (hospital == null) {
-            logger.warn("No hospital found with email={}", email);
-        } else {
-            logger.info("Hospital found for email={}", email);
-        }
-
-        return hospital;
+    public Hospital findByName(String name) {
+        logger.info("Searching hospital by name={}", name);
+        return hospitalRepository.findByName(name);
     }
 
     public Hospital updateHospital(String id, Hospital hospital) {

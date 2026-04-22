@@ -40,7 +40,7 @@ public class BloodRequestService {
         // Check across ALL blood banks whether stock of the requested blood group
         // is zero. If it is, notify nearby eligible donors automatically.
         try {
-            emergencyDonorAlertService.triggerIfNetworkStockEmpty(saved);
+            emergencyDonorAlertService.triggerEmergencyDonorAlert(saved);
         } catch (Exception ex) {
             logger.error("Emergency alert check failed for requestId={}: {}", saved.getId(), ex.getMessage(), ex);
         }

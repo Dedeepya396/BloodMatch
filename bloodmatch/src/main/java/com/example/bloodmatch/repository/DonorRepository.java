@@ -10,4 +10,5 @@ import java.util.List;
 public interface DonorRepository extends MongoRepository<Donor, String> {
 	Donor findByEmail(String email);
 	List<Donor> findByBloodGroup(String bloodGroup);
+	List<Donor> findByBloodGroupIn(List<String> bloodGroups);
 }

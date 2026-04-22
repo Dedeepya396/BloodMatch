@@ -1,10 +1,13 @@
 package com.example.bloodmatch.service;
 
+import com.example.bloodmatch.model.BloodBank;
+import com.example.bloodmatch.model.BloodPacket;
 import com.example.bloodmatch.model.BloodRequest;
 import com.example.bloodmatch.model.Donor;
+import com.example.bloodmatch.model.Hospital;
 import com.example.bloodmatch.observer.NotificationManager;
-import com.example.bloodmatch.repository.BloodPacketRepository;
 import com.example.bloodmatch.repository.DonorRepository;
+import com.example.bloodmatch.util.BloodCompatibilityUtil;
 import com.example.bloodmatch.util.DistanceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,22 +15,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * Emergency Donor Alert Service — Observer Pattern (Type-2 Notification)
  *
- * Triggered when a blood request arrives and ZERO AVAILABLE packets of the
- * requested blood group exist across ALL blood banks in the network.
+ * Triggered when a blood request arrives and no blood bank can satisfy the
+ * request (considering urgency level and blood compatibility).
  *
- * Criteria for an eligible donor:
- *   1. Blood group matches the requested blood group.
+ * HIGH urgency: only blood banks within RADIUS_KM are checked.
+ * LOW  urgency: ALL blood banks are checked (no distance limit).
+ *
+ * If no bank can satisfy, eligible donors within RADIUS_KM are notified.
+ *
+ * Eligible donor criteria:
+ *   1. Blood group is compatible with the requested group.
  *   2. Last donation date is null OR > 90 days ago.
- *   3. Located within 20 km of the requesting hospital.
- *
- * The email is sent from the shared admin address (jagadeeshamudala.111@gmail.com)
- * via the existing EmailNotificationObserver registered in NotificationManager.
+ *   3. Located within RADIUS_KM of the requesting hospital.
  */
 @Service
 public class EmergencyDonorAlertService {
@@ -40,46 +47,90 @@ public class EmergencyDonorAlertService {
     /** Minimum days since last donation to be eligible */
     private static final int MIN_DAYS_SINCE_DONATION = 90;
 
+    /** All blood groups in the system */
+    private static final List<String> ALL_BLOOD_GROUPS =
+            Arrays.asList("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-");
+
     @Autowired
-    private BloodPacketRepository bloodPacketRepository;
+    private BloodBankService bloodBankService;
 
     @Autowired
     private DonorRepository donorRepository;
 
     @Autowired
+    private HospitalService hospitalService;
+
+    @Autowired
     private NotificationManager notificationManager;
 
     /**
-     * Check if a zero-stock condition exists for the requested blood group
-     * across all blood banks, and if so, alert nearby eligible donors.
+     * Check whether any blood bank can satisfy the request (exact or compatible
+     * blood), respecting urgency-based distance rules.  If no bank can, alert
+     * nearby eligible donors.
      *
-     * @param request the incoming BloodRequest (must contain bloodGroupRequired,
-     *                latitude, longitude, and hospitalName)
+     * @param request the incoming BloodRequest
      */
-    public void triggerIfNetworkStockEmpty(BloodRequest request) {
-        String bloodGroup = request.getBloodGroupRequired();
+    public void triggerEmergencyDonorAlert(BloodRequest request) {
+        String requiredGroup = request.getBloodGroupRequired();
+        String urgency = request.getUrgency();
+        double reqLat = request.getLatitude();
+        double reqLon = request.getLongitude();
 
-        long availableCount = bloodPacketRepository.countByBloodGroupAndStatus(bloodGroup, "AVAILABLE");
+        logger.info("Emergency alert check — bloodGroup={}, urgency={}", requiredGroup, urgency);
 
-        if (availableCount > 0) {
-            logger.info("Emergency alert NOT triggered: {} AVAILABLE packets of {} found across all banks.",
-                    availableCount, bloodGroup);
+        // 1. Determine which blood groups are compatible (can donate TO the required group)
+        List<String> compatibleGroups = ALL_BLOOD_GROUPS.stream()
+                .filter(donorGroup -> BloodCompatibilityUtil.isCompatible(donorGroup, requiredGroup))
+                .collect(Collectors.toList());
+
+        logger.info("Compatible donor blood groups for {}: {}", requiredGroup, compatibleGroups);
+
+        // 2. Get blood banks (filtered by distance for HIGH urgency only)
+        List<BloodBank> banks = bloodBankService.getAllBloodBanks();
+
+        if ("HIGH".equalsIgnoreCase(urgency)) {
+            banks = banks.stream()
+                    .filter(bb -> DistanceUtil.calculate(
+                            bb.getLatitude(), bb.getLongitude(), reqLat, reqLon) <= RADIUS_KM)
+                    .collect(Collectors.toList());
+            logger.info("HIGH urgency — {} blood bank(s) within {} km.", banks.size(), RADIUS_KM);
+        } else {
+            logger.info("LOW urgency — checking all {} blood bank(s).", banks.size());
+        }
+
+        // 3. Check if ANY of those banks has AVAILABLE packets of a compatible blood group
+        boolean anyBankHasStock = false;
+        for (BloodBank bank : banks) {
+            for (String compatGroup : compatibleGroups) {
+                List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bank.getId(), compatGroup);
+                boolean hasAvailable = packets.stream()
+                        .anyMatch(p -> "AVAILABLE".equals(p.getStatus()) && p.getUnits() > 0);
+                if (hasAvailable) {
+                    logger.info("Blood bank '{}' has AVAILABLE {} stock — no emergency alert needed.",
+                            bank.getName(), compatGroup);
+                    anyBankHasStock = true;
+                    break;
+                }
+            }
+            if (anyBankHasStock) break;
+        }
+
+        if (anyBankHasStock) {
+            logger.info("Emergency alert NOT triggered — compatible stock found in blood banks.");
             return;
         }
 
-        logger.warn("ZERO stock of {} across ALL blood banks! Triggering emergency donor alert.", bloodGroup);
+        logger.warn("ZERO compatible stock ({}) found in {} bank(s)! Triggering emergency donor alert.",
+                requiredGroup, banks.size());
 
-        // Eligibility cutoff: 90 days ago
+        // 4. Find eligible donors: compatible blood group + >90 days since last donation + within RADIUS_KM
         LocalDate cutoffDate = LocalDate.now().minusDays(MIN_DAYS_SINCE_DONATION);
 
-        // Fetch all donors with matching blood group
-        List<Donor> matchingDonors = donorRepository.findByBloodGroup(bloodGroup);
-        logger.info("Found {} donor(s) with blood group {}.", matchingDonors.size(), bloodGroup);
+        List<Donor> compatibleDonors = donorRepository.findByBloodGroupIn(compatibleGroups);
+        logger.info("Found {} donor(s) with compatible blood groups.", compatibleDonors.size());
 
-        // Apply eligibility + proximity filters
-        List<Donor> eligibleDonors = matchingDonors.stream()
+        List<Donor> eligibleDonors = compatibleDonors.stream()
                 .filter(donor -> {
-                    // 90-day eligibility check
                     LocalDate lastDonation = donor.getLastDonationDate();
                     boolean eligible = (lastDonation == null) || !lastDonation.isAfter(cutoffDate);
                     if (!eligible) {
@@ -89,10 +140,8 @@ public class EmergencyDonorAlertService {
                     return eligible;
                 })
                 .filter(donor -> {
-                    // 20 km radius check
                     double distKm = DistanceUtil.calculate(
-                            request.getLatitude(), request.getLongitude(),
-                            donor.getLatitude(), donor.getLongitude());
+                            reqLat, reqLon, donor.getLatitude(), donor.getLongitude());
                     boolean nearby = distKm <= RADIUS_KM;
                     if (!nearby) {
                         logger.debug("Donor {} skipped — distance {:.2f} km > {} km.",
@@ -104,50 +153,63 @@ public class EmergencyDonorAlertService {
                 })
                 .collect(Collectors.toList());
 
-        logger.info("{} donor(s) qualify for emergency alert (blood group={}, within {} km, >90 days).",
-                eligibleDonors.size(), bloodGroup, RADIUS_KM);
+        logger.info("{} donor(s) qualify for emergency alert (compatible with {}, within {} km, >90 days).",
+                eligibleDonors.size(), requiredGroup, RADIUS_KM);
 
         if (eligibleDonors.isEmpty()) {
-            logger.warn("No eligible donors found nearby for blood group {}.", bloodGroup);
+            logger.warn("No eligible donors found nearby for blood group {}.", requiredGroup);
             return;
         }
 
-        // Notify each eligible donor via the existing Observer pipeline
+        // 5. Notify each eligible donor via the Observer pipeline
         for (Donor donor : eligibleDonors) {
-            String subject = "🚨 URGENT: Blood Donation Needed — " + bloodGroup + " — BloodMatch";
-            String messageText = buildEmergencyMessage(donor, request);
+            String urgencyLabel = "HIGH".equalsIgnoreCase(urgency) ? "🔴 HIGH EMERGENCY" : "🟡 LOW EMERGENCY";
+            String subject = "🚨 URGENT: Blood Donation Needed — " + requiredGroup + " — " + urgencyLabel;
+            
+            // Fetch hospital details for address
+            Hospital hospital = hospitalService.findByName(request.getHospitalName());
+            String hospitalAddress = (hospital != null) ? hospital.getAddress() : "Address provided on contact";
+
+            String messageText = buildEmergencyMessage(donor, request, urgency, hospitalAddress);
 
             logger.info("Sending emergency alert to donor {} ({}).", donor.getName(), donor.getEmail());
             notificationManager.notifyObservers(donor, subject, messageText);
         }
 
-        logger.info("Emergency alert dispatch complete for blood group {}.", bloodGroup);
+        logger.info("Emergency alert dispatch complete for blood group {} ({} urgency).",
+                requiredGroup, urgency);
     }
 
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
-    private String buildEmergencyMessage(Donor donor, BloodRequest request) {
+    private String buildEmergencyMessage(Donor donor, BloodRequest request, String urgency, String address) {
+        String urgencyLabel = "HIGH".equalsIgnoreCase(urgency) ? "🔴 HIGH EMERGENCY" : "🟡 LOW EMERGENCY";
+        boolean isExact = donor.getBloodGroup().equals(request.getBloodGroupRequired());
+        String matchType = isExact ? "exact match" : "compatible match";
         return String.format(
             "Hello %s,\n\n" +
-            "🚨 URGENT BLOOD REQUEST 🚨\n\n" +
-            "Hospital: %s\n" +
-            "Blood Group Required: %s\n" +
-            "Units Required: %d\n\n" +
-            "There is currently NO stock of %s blood available in any blood bank " +
-            "in our network. You are one of the nearest eligible donors who can help.\n\n" +
-            "You last donated more than 90 days ago (or are a first-time donor), which means " +
-            "you are eligible to donate today!\n\n" +
-            "Please contact the hospital or your nearest blood bank as soon as possible.\n\n" +
-            "Your donation could save a life right now.\n\n" +
+            "%s BLOOD REQUEST — ACTION REQUIRED!\n\n" +
+            "This is a crucial alert. A patient requires blood group %s and currently there is ZERO stock of this group (or compatible groups) available in any nearby blood banks in our network.\n\n" +
+            "We have found you as an eligible donor with a %s (%s) who is currently located near the hospital.\n\n" +
+            "Request Details:\n" +
+            "• Hospital: %s\n" +
+            "• Hospital Address: %s\n" +
+            "• Blood Group Required: %s\n" +
+            "• Units Required: %d\n\n" +
+            "You are eligible to donate today! Please try to donate directly at the hospital at your earliest convenience. Your contribution makes a huge difference and could save a life right now.\n\n" +
             "Thank you,\n" +
             "BloodMatch Emergency Team",
             donor.getName(),
-            request.getHospitalName(),
+            urgencyLabel,
             request.getBloodGroupRequired(),
-            request.getUnitsRequired(),
-            request.getBloodGroupRequired()
+            donor.getBloodGroup(),
+            matchType,
+            request.getHospitalName(),
+            address,
+            request.getBloodGroupRequired(),
+            request.getUnitsRequired()
         );
     }
 }

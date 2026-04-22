@@ -35,16 +35,26 @@ public class EmailNotificationObserver implements NotificationObserver {
             return;
         }
 
+        // If the message already contains HTML tags (like <br> or <strong>), don't replace \n
+        String formattedMessage = messageText.contains("<") ? messageText : messageText.replace("\n", "<br>");
+        
+        boolean isEmergency = subject.contains("URGENT") || subject.contains("EMERGENCY");
+        String headerColor = isEmergency ? "#c0392b" : "#2980b9";
+        String headerIcon = isEmergency ? "&#x1F6A8;" : "&#128167;";
+        String title = isEmergency ? "Emergency Blood Requirement" : "You're Eligible to Donate Blood!";
+
         String htmlBody = String.format(
-            "<html><body style='font-family:Arial,sans-serif;color:#333;'>" +
-            "<div style='max-width:600px;margin:auto;padding:30px;border:1px solid #e0e0e0;border-radius:8px;'>" +
-            "<h2 style='color:#c0392b;'>&#128167; You're Eligible to Donate Blood!</h2>" +
-            "<p>Hello <strong>%s</strong>,</p>" +
-            "<p>It has been more than <strong>90 days</strong> since your last donation (or you are a new potential donor). " +
-            "You are now eligible to donate blood again! Your contribution can make a huge difference.</p>" +
-            "<p>Please visit your nearest blood bank or check the <strong>BloodMatch</strong> app for active requests.</p>" +
-            "<br><p style='color:#888;font-size:12px;'>Thank you,<br><strong>BloodMatch Team</strong></p>" +
-            "</div></body></html>", donor.getName());
+            "<html><body style='font-family:Arial,sans-serif;color:#333;line-height:1.6;'>" +
+            "<div style='max-width:600px;margin:auto;padding:30px;border:1px solid #e0e0e0;border-radius:12px;background-color:#ffffff;box-shadow: 0 4px 6px rgba(0,0,0,0.05);'>" +
+            "<div style='text-align:center;margin-bottom:20px;'>" +
+            "<h2 style='color:%s;margin:0;'>%s %s</h2>" +
+            "</div>" +
+            "<div style='margin-bottom:25px;background-color:#fafafa;padding:20px;border-radius:8px;border-left:4px solid %s;'>%s</div>" +
+            "<p style='color:#888;font-size:12px;border-top:1px solid #eee;padding-top:15px;text-align:center;'>" +
+            "This is an automated message from <strong>BloodMatch Team</strong>.<br>" +
+            "Thank you for being a life saver!</p>" +
+            "</div></body></html>", 
+            headerColor, headerIcon, title, headerColor, formattedMessage);
 
         Email from = new Email(fromEmailAddress, "BloodMatch Team");
         Email to = new Email(donor.getEmail());

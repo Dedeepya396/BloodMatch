@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface HospitalRepository extends MongoRepository<Hospital, String> {
     Hospital findByEmail(String email);
+    Hospital findByName(String name);
 }
