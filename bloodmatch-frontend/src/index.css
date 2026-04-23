@@ -418,6 +418,8 @@ select:focus {
   background: #ecfdf5;
   color: #059669;
   border: 1px solid #a7f3d0;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
 }
 
 .badge-red {
@@ -538,13 +540,13 @@ select:focus {
   flex-shrink: 0;
   padding: 6px 14px;
   border-radius: 99px;
-  font-family: 'Syne', sans-serif;
-  font-size: 14px;
-  font-weight: 800;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
   background: #fff1f2;
   color: #dc2626;
   border: 1.5px solid #fecaca;
-  letter-spacing: 0.03em;
+  letter-spacing: -0.01em;
 }
 
 /* "Bank" type tag */
@@ -594,6 +596,7 @@ select:focus {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
