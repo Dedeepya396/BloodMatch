@@ -420,6 +420,190 @@ select:focus {
   border: 1px solid #fecaca;
 }
 
+/* ── MATCH LIST ── */
+.matches-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 28px 0 16px;
+}
+
+.match-count {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+}
+
+.matches-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Base match card */
+.match-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  animation: fadeSlideIn 0.3s both;
+}
+
+.match-item:hover {
+  border-color: rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Exact match — green left accent + tinted background */
+.match-item.exact {
+  border-color: #86efac;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 60%);
+  box-shadow: 0 0 0 1px #bbf7d0, var(--shadow-sm);
+}
+
+.match-item.exact:hover {
+  box-shadow: 0 0 0 1px #86efac, var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Compatible match — amber left accent + tinted background */
+.match-item.compatible {
+  border-color: #fcd34d;
+  background: linear-gradient(135deg, #fffbeb 0%, #ffffff 60%);
+  box-shadow: 0 0 0 1px #fde68a, var(--shadow-sm);
+}
+
+.match-item.compatible:hover {
+  box-shadow: 0 0 0 1px #fcd34d, var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* Bank match — blue left accent */
+.match-item.bank {
+  border-color: #93c5fd;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 60%);
+  box-shadow: 0 0 0 1px #bfdbfe, var(--shadow-sm);
+}
+
+.match-item.bank:hover {
+  box-shadow: 0 0 0 1px #93c5fd, var(--shadow-md);
+}
+
+.match-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.match-meta {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Blood group pill (right side) */
+.blood-badge {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-family: 'Syne', sans-serif;
+  font-size: 14px;
+  font-weight: 800;
+  background: #fff1f2;
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+  letter-spacing: 0.03em;
+}
+
+/* "Bank" type tag */
+.bank-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+/* Match type pill badges */
+.match-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.match-type-badge.exact {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.match-type-badge.compatible {
+  background: #fef9c3;
+  color: #a16207;
+  border: 1px solid #fde68a;
+}
+
+/* Entry animation */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 14px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px dashed var(--border);
+}
+
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;

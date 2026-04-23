@@ -203,59 +203,74 @@ function BloodRequest() {
             </div>
           ) : (
             <ul className="matches-list">
-              {matches.map((m, index) => (
-                <li
-                  className="match-item"
-                  key={index}
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  {m.type === "BANK" ? (
-                    <>
-                      <div>
-                        <div className="match-name">
-                          {m.name}{" "}
-                          <span className="bank-badge">Bank</span>
+              {matches.map((m, index) => {
+                // Determine card variant class
+                let itemClass = "match-item";
+                if (m.type === "BANK") {
+                  itemClass += " bank";
+                } else if (m.exactMatch === true) {
+                  itemClass += " exact";
+                } else {
+                  itemClass += " compatible";
+                }
+
+                return (
+                  <li
+                    className={itemClass}
+                    key={index}
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    {m.type === "BANK" ? (
+                      <>
+                        <div>
+                          <div className="match-name">
+                            {m.name}
+                            <span className="bank-badge">🏦 Blood Bank</span>
+                          </div>
+                          <div className="match-meta">
+                            {m.distanceKm != null
+                              ? `${m.distanceKm.toFixed(1)} km away`
+                              : "Distance unknown"}
+                            {m.availableUnits != null &&
+                              ` · ${m.availableUnits} units available`}
+                            {m.contactNumber &&
+                              ` · ${m.contactNumber}`}
+                          </div>
                         </div>
-                        <div className="match-meta">
-                          {m.distanceKm != null
-                            ? `${m.distanceKm.toFixed(1)} km away`
-                            : "Distance unknown"}
-                          {m.availableUnits != null &&
-                            ` · ${m.availableUnits} units available`}
+                        <span className="blood-badge">{m.bloodGroup}</span>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <div className="match-name">
+                            {m.donor.name}
+                            {/* Match type pill — prominent, inline with name */}
+                            {m.exactMatch === true ? (
+                              <span className="match-type-badge exact">
+                                ✅ Exact Match
+                              </span>
+                            ) : (
+                              <span className="match-type-badge compatible">
+                                🔄 Compatible Match
+                              </span>
+                            )}
+                          </div>
+                          <div className="match-meta">
+                            {m.distanceKm != null
+                              ? `${m.distanceKm.toFixed(1)} km away`
+                              : "Distance unknown"}
+                            {m.donor.available !== undefined &&
+                              ` · ${m.donor.available ? "Available" : "Unavailable"}`}
+                          </div>
                         </div>
-                      </div>
-                      <span className="blood-badge">{m.bloodGroup}</span>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <div className="match-name">
-                          {m.donor.name}
-                        </div>
-                        <div className="match-meta">
-                          {m.distanceKm != null
-                            ? `${m.distanceKm.toFixed(1)} km away`
-                            : "Distance unknown"}
-                          {m.donor.available !== undefined &&
-                            ` · ${m.donor.available
-                              ? "Available"
-                              : "Unavailable"
-                            }`}
-                          {m.exactMatch && (
-                            <span className="exact-badge">
-                              {" "}
-                              · Exact Match ✓
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <span className="blood-badge">
-                        {m.donor.bloodGroup}
-                      </span>
-                    </>
-                  )}
-                </li>
-              ))}
+                        <span className="blood-badge">
+                          {m.donor.bloodGroup}
+                        </span>
+                      </>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </>

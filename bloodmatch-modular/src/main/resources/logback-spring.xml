@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ============================================================
+         BloodMatch Modular – Logback Configuration
+         ============================================================
+         Strategy:
+           • Console appender  – always on (mirrors Spring Boot default).
+           • Rolling file      – one file per day, named by date.
+                                 No size cap, no history limit, no deletion.
+           • 86 400 log lines / day is well within defaults; keeping
+             ALL historical logs is the explicit requirement.
+         ============================================================ -->
+
+    <springProperty scope="context" name="appName" source="spring.application.name" defaultValue="bloodmatch"/>
+
+    <!-- ─── Console Appender ────────────────────────────────────── -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ─── Daily Rolling File Appender ─────────────────────────── -->
+    <!--
+        • activeFileName  : logs/bloodmatch.log  (tail → today's log)
+        • fileNamePattern : logs/daily/bloodmatch.YYYY-MM-DD.log
+          Each day at midnight the active file is renamed to the dated
+          archive and a fresh bloodmatch.log is opened.
+        • maxHistory      : 36500  (100 years – effectively unlimited)
+        • totalSizeCap    : 500GB  – hard safety limit, practically
+                                     unreachable in normal operation.
+        • cleanHistoryOnStart: false – never purge on restart.
+    -->
+    <appender name="DAILY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/bloodmatch.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Archive files: logs/daily/bloodmatch.2026-04-23.log -->
+            <fileNamePattern>logs/daily/bloodmatch.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- Keep 36 500 days worth (100 years) – effectively no deletion -->
+            <maxHistory>36500</maxHistory>
+            <!-- 500 GB safety cap – far beyond any realistic disk usage -->
+            <totalSizeCap>500GB</totalSizeCap>
+            <!-- Do NOT wipe old archives when the application restarts -->
+            <cleanHistoryOnStart>false</cleanHistoryOnStart>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ─── Root Logger ──────────────────────────────────────────── -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="DAILY_FILE"/>
+    </root>
+
+</configuration>
