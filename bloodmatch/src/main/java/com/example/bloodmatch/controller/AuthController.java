@@ -50,6 +50,13 @@ public class AuthController {
         }
         // if user is donor
         if ("DONOR".equalsIgnoreCase(role)) {
+            // Validate age (18-60)
+            int age = req.getAge();
+            if (age < 18 || age > 60) {
+                logger.error("Donor signup failed: Age {} is outside allowed range (18-60)", age);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("only this age grp is allowed as donor");
+            }
+
             // if email already exists
             if (donorRepository.findByEmail(email) != null) {
                 logger.error("Donor with email={} already exists", email);
@@ -57,11 +64,11 @@ public class AuthController {
             }
             String hash = passwordEncoder.encode(req.getPassword());
             // if last donation date is not null that is parsed else it is kept as null
-            LocalDate lastDonation = req.getLastDonationDate() != null ? LocalDate.parse(req.getLastDonationDate())
+            LocalDate lastDonation = req.getLastDonationDate() != null && !req.getLastDonationDate().isEmpty() ? LocalDate.parse(req.getLastDonationDate())
                     : null;
             // create a donor through user factory
             Donor donor = UserFactory.createDonor(req.getName(), email, hash, req.getBloodGroup(), req.getLatitude(),
-                    req.getLongitude(), req.isAvailable(), lastDonation);
+                    req.getLongitude(), req.isAvailable(), lastDonation, age);
             // save it to db
             Donor saved = donorRepository.save(donor);
             // sending status code 200 with user id, role, name, email

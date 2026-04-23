@@ -15,28 +15,31 @@ public class Donor extends User implements BloodSupply {
     private boolean available;
 
     private LocalDate lastDonationDate;
+    private int age;
 
     public Donor() {
     }
 
     public Donor(String name, String bloodGroup, double latitude, double longitude,
-            boolean available, LocalDate lastDonationDate) {
+            boolean available, LocalDate lastDonationDate, int age) {
         super(name);
         this.bloodGroup = bloodGroup;
         this.latitude = latitude;
         this.longitude = longitude;
         this.available = available;
         this.lastDonationDate = lastDonationDate;
+        this.age = age;
     }
 
     public Donor(String name, String email, String passwordHash, String bloodGroup, double latitude, double longitude,
-                 boolean available, LocalDate lastDonationDate) {
+                 boolean available, LocalDate lastDonationDate, int age) {
         super(name, email, passwordHash);
         this.bloodGroup = bloodGroup;
         this.latitude = latitude;
         this.longitude = longitude;
         this.available = available;
         this.lastDonationDate = lastDonationDate;
+        this.age = age;
     }
 
     @Override

@@ -7,7 +7,7 @@ function Signup() {
     const [form, setForm] = useState({
         name: '', email: '', password: '',
         // donor
-        bloodGroup: '', latitude: '', longitude: '', lastDonationDate: '',
+        bloodGroup: '', latitude: '', longitude: '', lastDonationDate: '', age: '',
         // hospital & blood bank
         address: '', contactNumber: ''
     });
@@ -25,6 +25,13 @@ function Signup() {
         try {
             const payload = { role, name: form.name, email: form.email, password: form.password };
             if (role === 'DONOR') {
+                const ageNum = parseInt(form.age);
+                if (isNaN(ageNum) || ageNum < 18 || ageNum > 60) {
+                    setError('only this age grp is allowed as donor');
+                    setLoading(false);
+                    return;
+                }
+                payload.age = ageNum;
                 payload.bloodGroup = form.bloodGroup;
                 payload.latitude = parseFloat(form.latitude || 0);
                 payload.longitude = parseFloat(form.longitude || 0);
@@ -91,6 +98,10 @@ function Signup() {
 
                 {role === 'DONOR' && (
                     <>
+                        <div className="field">
+                            <label>Age *</label>
+                            <input name="age" type="number" value={form.age} onChange={handleChange} placeholder="Required (18-60)" />
+                        </div>
                         <div className="field">
                             <label>Blood Group</label>
                             <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange}>

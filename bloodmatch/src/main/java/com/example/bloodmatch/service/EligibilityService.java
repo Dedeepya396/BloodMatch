@@ -3,6 +3,7 @@ package com.example.bloodmatch.service;
 import com.example.bloodmatch.model.Donor;
 import com.example.bloodmatch.observer.NotificationManager;
 import com.example.bloodmatch.repository.DonorRepository;
+import com.example.bloodmatch.util.NotificationContentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,13 +42,18 @@ public class EligibilityService {
 
         for (Donor donor : eligibleDonors) {
             String subject = "Ready to save a life again? - BloodMatch";
+            
             String messageText = String.format(
                 "Hello <strong>%s</strong>,<br><br>" +
-                "It has been more than <strong>90 days</strong> since your last donation (or you are a new potential donor). " +
-                "You are now eligible to donate blood again! Your contribution can make a huge difference.<br><br>" +
-                "Please visit your nearest blood bank or check the app for active requests.<br><br>" +
-                "Thank you,<br><strong>BloodMatch Team</strong>", 
-                donor.getName()
+                "<div style='background-color: #f0f7ff; border-left: 4px solid #3498db; padding: 15px; margin-bottom: 20px; border-radius: 4px;'>" +
+                "  <strong style='color: #2980b9; font-size: 16px;'> Ready to save a life again?</strong><br>" +
+                "  It has been more than <strong>90 days</strong> since your last donation. You are now eligible to donate blood again! Your contribution can make a huge difference." +
+                "</div>" +
+                "<p>Please visit your nearest blood bank or check the app for active requests.</p>" +
+                "%s" +
+                "<br><br>Thank you,<br><strong>BloodMatch Team</strong>", 
+                donor.getName(),
+                NotificationContentUtil.getDonorGuidelinesHtml()
             );
             
             notificationManager.notifyObservers(donor, subject, messageText);

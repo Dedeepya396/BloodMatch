@@ -171,12 +171,61 @@ function Profile() {
           {auth.role === 'DONOR' ? (
             <>
               <div className="field">
+                <label>Age</label>
+                <input name="age" value={data.age || ''} readOnly />
+              </div>
+              <div className="field">
                 <label>Blood Group</label>
-                <input name="bloodGroup" value={data.bloodGroup || ''} onChange={handleChange} />
+                <select name="bloodGroup" value={data.bloodGroup || ''} onChange={handleChange}>
+                  <option value="">-- Select --</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
               </div>
               <div className="field">
                 <label>Last Donation</label>
                 <input name="lastDonationDate" type="date" value={data.lastDonationDate || ''} onChange={handleChange} />
+              </div>
+
+              {/* Eligibility Status Section */}
+              <div className="field span-2" style={{ marginTop: 8 }}>
+                {(() => {
+                  const lastDate = data.lastDonationDate;
+                  if (!lastDate) {
+                    return (
+                      <div style={{ background: '#ecfdf5', color: '#059669', padding: '12px 16px', borderRadius: '12px', border: '1px solid #10b981', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                        <span></span> You are eligible to donate today!
+                      </div>
+                    );
+                  }
+
+                  const last = new Date(lastDate);
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0); // Normalize today
+                  const diffTime = today - last;
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                  if (diffDays >= 90) {
+                    return (
+                      <div style={{ background: '#ecfdf5', color: '#059669', padding: '12px 16px', borderRadius: '12px', border: '1px solid #10b981', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                        <span></span> You are eligible to donate today!
+                      </div>
+                    );
+                  } else {
+                    const remaining = 90 - diffDays;
+                    return (
+                      <div style={{ background: '#fff7ed', color: '#ea580c', padding: '12px 16px', borderRadius: '12px', border: '1px solid #f97316', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
+                        <span></span> You need {remaining} more days to become eligible to donate.
+                      </div>
+                    );
+                  }
+                })()}
               </div>
             </>
           ) : (

@@ -9,6 +9,7 @@ import com.example.bloodmatch.observer.NotificationManager;
 import com.example.bloodmatch.repository.DonorRepository;
 import com.example.bloodmatch.util.BloodCompatibilityUtil;
 import com.example.bloodmatch.util.DistanceUtil;
+import com.example.bloodmatch.util.NotificationContentUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -188,19 +189,26 @@ public class EmergencyDonorAlertService {
         String urgencyLabel = "HIGH".equalsIgnoreCase(urgency) ? "🔴 HIGH EMERGENCY" : "🟡 LOW EMERGENCY";
         boolean isExact = donor.getBloodGroup().equals(request.getBloodGroupRequired());
         String matchType = isExact ? "exact match" : "compatible match";
+        
         return String.format(
-            "Hello %s,\n\n" +
-            "%s BLOOD REQUEST — ACTION REQUIRED!\n\n" +
-            "This is a crucial alert. A patient requires blood group %s and currently there is ZERO stock of this group (or compatible groups) available in any nearby blood banks in our network.\n\n" +
-            "We have found you as an eligible donor with a %s (%s) who is currently located near the hospital.\n\n" +
-            "Request Details:\n" +
-            "• Hospital: %s\n" +
-            "• Hospital Address: %s\n" +
-            "• Blood Group Required: %s\n" +
-            "• Units Required: %d\n\n" +
-            "You are eligible to donate today! Please try to donate directly at the hospital at your earliest convenience. Your contribution makes a huge difference and could save a life right now.\n\n" +
-            "Thank you,\n" +
-            "BloodMatch Emergency Team",
+            "Hello <strong>%s</strong>,<br><br>" +
+            "<div style='background-color: #fff5f5; border-left: 4px solid #c0392b; padding: 15px; margin-bottom: 20px; border-radius: 4px;'>" +
+            "  <strong style='color: #c0392b; font-size: 16px;'>%s BLOOD REQUEST — ACTION REQUIRED!</strong><br>" +
+            "  A patient requires blood group <strong>%s</strong> and there is currently <strong>ZERO stock</strong> available in any nearby blood banks." +
+            "</div>" +
+            "<p>We have identified you as a nearby eligible donor with <strong>%s (%s)</strong>.</p>" +
+            "<div style='background-color: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px;'>" +
+            "  <strong style='color: #2c3e50; border-bottom: 1px solid #eee; display: block; padding-bottom: 5px; margin-bottom: 10px;'>Hospital Request Details:</strong>" +
+            "  <table style='width: 100%%; border-collapse: collapse; font-size: 14px;'>" +
+            "    <tr><td style='padding: 4px 0; color: #777;'>Hospital:</td><td style='padding: 4px 0;'><strong>%s</strong></td></tr>" +
+            "    <tr><td style='padding: 4px 0; color: #777;'>Address:</td><td style='padding: 4px 0;'><strong>%s</strong></td></tr>" +
+            "    <tr><td style='padding: 4px 0; color: #777;'>Blood Group Needed:</td><td style='padding: 4px 0;'><strong style='color: #c0392b;'>%s</strong></td></tr>" +
+            "    <tr><td style='padding: 4px 0; color: #777;'>Units Required:</td><td style='padding: 4px 0;'><strong>%d</strong></td></tr>" +
+            "  </table>" +
+            "</div>" +
+            "<p style='font-size: 15px;'><strong>You are eligible to donate today!</strong> Please try to donate directly at the hospital at your earliest convenience. Your contribution could save a life right now.</p>" +
+            "%s" +
+            "<br><br>Thank you,<br><strong>BloodMatch Emergency Team</strong>",
             donor.getName(),
             urgencyLabel,
             request.getBloodGroupRequired(),
@@ -209,7 +217,8 @@ public class EmergencyDonorAlertService {
             request.getHospitalName(),
             address,
             request.getBloodGroupRequired(),
-            request.getUnitsRequired()
+            request.getUnitsRequired(),
+            NotificationContentUtil.getDonorGuidelinesHtml()
         );
     }
 }

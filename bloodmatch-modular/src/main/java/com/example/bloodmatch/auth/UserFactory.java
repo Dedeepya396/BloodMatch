@@ -13,8 +13,8 @@ import java.time.LocalDate;
 public class UserFactory {
 
     public static Donor createDonor(String name, String email, String passwordHash, String bloodGroup, double latitude,
-                                    double longitude, boolean available, LocalDate lastDonationDate) {
-        return new Donor(name, email, passwordHash, bloodGroup, latitude, longitude, available, lastDonationDate);
+                                    double longitude, boolean available, LocalDate lastDonationDate, int age) {
+        return new Donor(name, email, passwordHash, bloodGroup, latitude, longitude, available, lastDonationDate, age);
     }
 
     public static Hospital createHospital(String name, String email, String passwordHash, String address, double latitude,
@@ -29,7 +29,7 @@ public class UserFactory {
 
     public static User createUserFromRole(String role, Object... params) {
         if ("DONOR".equalsIgnoreCase(role)) {
-            return createDonor((String) params[0], (String) params[1], (String) params[2], (String) params[3], (Double) params[4], (Double) params[5], (Boolean) params[6], (LocalDate) params[7]);
+            return createDonor((String) params[0], (String) params[1], (String) params[2], (String) params[3], (Double) params[4], (Double) params[5], (Boolean) params[6], (LocalDate) params[7], (Integer) params[8]);
         } else if ("HOSPITAL".equalsIgnoreCase(role)) {
             return createHospital((String) params[0], (String) params[1], (String) params[2], (String) params[3], (Double) params[4], (Double) params[5], (String) params[6]);
         } else if ("BLOOD_BANK".equalsIgnoreCase(role)) {

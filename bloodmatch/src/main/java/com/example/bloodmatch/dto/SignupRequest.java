@@ -12,6 +12,7 @@ public class SignupRequest {
     private double longitude;
     private boolean available;
     private String lastDonationDate;
+    private int age;
 
     // hospital fields
     private String address;
@@ -94,6 +95,14 @@ public class SignupRequest {
 
     public void setLastDonationDate(String lastDonationDate) {
         this.lastDonationDate = lastDonationDate;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
     }
 
     public String getAddress() {
