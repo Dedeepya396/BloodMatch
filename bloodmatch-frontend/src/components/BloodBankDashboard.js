@@ -7,8 +7,8 @@ const BLOOD_GROUPS = ["All", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const STATUS_COLORS = {
   AVAILABLE: { bg: "rgba(34,197,94,0.15)", color: "#4ade80", border: "#22c55e" },
-  DONATED:   { bg: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "#3b82f6" },
-  EXPIRED:   { bg: "rgba(239,68,68,0.15)",  color: "#f87171", border: "#ef4444" },
+  DONATED: { bg: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "#3b82f6" },
+  EXPIRED: { bg: "rgba(239,68,68,0.15)", color: "#f87171", border: "#ef4444" },
 };
 
 function formatDate(iso) {
@@ -32,8 +32,8 @@ function StatCard({ icon, label, value, color }) {
       display: "flex", flexDirection: "column", gap: 6
     }}>
       <div style={{ fontSize: 26 }}>{icon}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: color || "#fff" }}>{value}</div>
-      <div style={{ fontSize: 12, color: "#7a9bbf", letterSpacing: "0.04em" }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 700, color: color || "#1e293b" }}>{value}</div>
+      <div style={{ fontSize: 12, color: "var(--text-secondary)", letterSpacing: "0.04em" }}>{label}</div>
     </div>
   );
 }
@@ -45,17 +45,17 @@ function PacketRow({ packet, index }) {
 
   return (
     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.15s" }}
-        className="packet-row">
-      <td style={{ padding: "10px 14px", fontWeight: 700, color: "#94a3b8" }}>{index + 1}</td>
+      className="packet-row">
+      <td style={{ padding: "10px 14px", fontWeight: 700, color: "var(--text-muted)" }}>{index + 1}</td>
       <td style={{ padding: "10px 14px" }}>
         <span style={{ background: "rgba(239,68,68,0.18)", color: "#f87171", borderRadius: 6, padding: "3px 10px", fontWeight: 700, fontSize: 13 }}>
           {packet.bloodGroup}
         </span>
       </td>
-      <td style={{ padding: "10px 14px", fontWeight: 600, color: "#e2e8f0", textAlign: "center" }}>{packet.units}</td>
-      <td style={{ padding: "10px 14px", color: "#94a3b8", fontSize: 13 }}>{formatDate(packet.collectedDate)}</td>
+      <td style={{ padding: "10px 14px", fontWeight: 600, color: "var(--text-primary)", textAlign: "center" }}>{packet.units}</td>
+      <td style={{ padding: "10px 14px", color: "var(--text-secondary)", fontSize: 13 }}>{formatDate(packet.collectedDate)}</td>
       <td style={{ padding: "10px 14px", fontSize: 13 }}>
-        <span style={{ color: days < 0 ? "#f87171" : days <= 7 ? "#fbbf24" : "#94a3b8" }}>
+        <span style={{ color: days < 0 ? "#f87171" : days <= 7 ? "#fbbf24" : "var(--text-secondary)" }}>
           {formatDate(packet.expiryDate)}
           {packet.status === "AVAILABLE" && (
             <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.8 }}>
@@ -256,8 +256,8 @@ function BloodBankDashboard() {
         <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 4 }}>
           <div style={{ width: 46, height: 46, borderRadius: 12, background: "linear-gradient(135deg,#ef4444,#b91c1c)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🏦</div>
           <div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#f1f5f9" }}>Blood Bank Dashboard</h2>
-            <p style={{ margin: 0, color: "#7a9bbf", fontSize: 13 }}>Welcome, {auth.name}</p>
+            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "var(--text-primary)" }}>Blood Bank Dashboard</h2>
+            <p style={{ margin: 0, color: "var(--text-secondary)", fontSize: 13 }}>Welcome, {auth.name}</p>
           </div>
         </div>
       </div>
@@ -267,70 +267,73 @@ function BloodBankDashboard() {
         <StatCard label="Total Packets" value={packets.length} color="#60a5fa" />
         <StatCard label="Available Units" value={totalUnits} color="#4ade80" />
         <StatCard label="Expiring in 7 days" value={expiringSoon.length} color="#fbbf24" />
-        <StatCard  label="Expired Packets" value={expiredCount} color="#f87171" />
+        <StatCard label="Expired Packets" value={expiredCount} color="#f87171" />
       </div>
 
       {/* ── Action Buttons Row ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 14, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16, marginBottom: 32 }}>
         {/* ADD PACKET TOGGLE */}
-        <div 
+        <div
           onClick={() => setShowAddForm(!showAddForm)}
-          style={{ 
-            background: showAddForm ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.04)", 
-            border: showAddForm ? "1px solid rgba(255,255,255,0.15)" : "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14, padding: "18px 22px", cursor: "pointer", transition: "all 0.2s",
-            display: "flex", alignItems: "center", justifyContent: "space-between"
+          style={{
+            background: showAddForm ? "rgba(220,38,38,0.05)" : "white",
+            border: showAddForm ? "1px solid #dc2626" : "1px solid var(--border)",
+            borderRadius: 16, padding: "20px 24px", cursor: "pointer", transition: "all 0.2s",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div className="panel-icon" style={{ background: "rgba(59,130,246,0.18)", color: "#60a5fa" }}>➕</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div className="panel-icon" style={{ background: "#fff1f2", color: "#dc2626" }}>➕</div>
             <div>
-              <div className="panel-title" style={{ margin: 0 }}>Add Blood Packet</div>
+              <div className="panel-title" style={{ margin: 0, fontSize: '15px' }}>Add Blood Packet</div>
               <div className="panel-desc" style={{ margin: 0 }}>Register new inventory</div>
             </div>
           </div>
         </div>
 
         {/* SHOW DONATED TOGGLE */}
-        <div 
+        <div
           onClick={() => { if (!showDonated) fetchDonated(); else setShowDonated(false); }}
-          style={{ 
-            background: showDonated ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.04)", 
-            border: showDonated ? "1px solid rgba(34,197,94,0.25)" : "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14, padding: "18px 22px", cursor: "pointer", transition: "all 0.2s",
-            display: "flex", alignItems: "center", justifyContent: "space-between"
+          style={{
+            background: showDonated ? "rgba(5,150,105,0.05)" : "white",
+            border: showDonated ? "1px solid #059669" : "1px solid var(--border)",
+            borderRadius: 16, padding: "20px 24px", cursor: "pointer", transition: "all 0.2s",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div className="panel-icon" style={{ background: "rgba(34,197,94,0.18)", color: "#4ade80" }}>🩸</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div className="panel-icon" style={{ background: "#ecfdf5", color: "#059669" }}>🩸</div>
             <div>
-              <div className="panel-title" style={{ margin: 0 }}>Donated Packets</div>
+              <div className="panel-title" style={{ margin: 0, fontSize: '15px' }}>Donated Packets</div>
               <div className="panel-desc" style={{ margin: 0 }}>View dispatched records</div>
             </div>
           </div>
         </div>
 
         {/* SHOW EXPIRED TOGGLE */}
-        <div 
+        <div
           onClick={() => { if (!showExpired) fetchExpired(); else setShowExpired(false); }}
-          style={{ 
-            background: showExpired ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.04)", 
-            border: showExpired ? "1px solid rgba(239,68,68,0.25)" : "1px solid rgba(255,255,255,0.08)",
-            borderRadius: 14, padding: "18px 22px", cursor: "pointer", transition: "all 0.2s",
-            display: "flex", alignItems: "center", justifyContent: "space-between"
+          style={{
+            background: showExpired ? "rgba(220,38,38,0.05)" : "white",
+            border: showExpired ? "1px solid #dc2626" : "1px solid var(--border)",
+            borderRadius: 16, padding: "20px 24px", cursor: "pointer", transition: "all 0.2s",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div className="panel-icon" style={{ background: "rgba(239,68,68,0.18)", color: "#f87171" }}>⚠️</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <div className="panel-icon" style={{ background: "#fff1f2", color: "#dc2626" }}>⚠️</div>
             <div>
-              <div className="panel-title" style={{ margin: 0 }}>Expired Packets</div>
+              <div className="panel-title" style={{ margin: 0, fontSize: '15px' }}>Expired Packets</div>
               <div className="panel-desc" style={{ margin: 0 }}>Manage expiring units</div>
             </div>
           </div>
-          <button style={{ 
-            background: showExpired ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.1)", 
-            color: showExpired ? "#f87171" : "#94a3b8", 
-            border: "none", borderRadius: 8, padding: "6px 14px", fontWeight: 700, pointerEvents: "none"
+          <button style={{
+            background: showExpired ? "#dc2626" : "#f1f5f9",
+            color: showExpired ? "white" : "#64748b",
+            border: "none", borderRadius: 8, padding: "6px 12px", fontWeight: 700, fontSize: '11px', pointerEvents: "none"
           }}>
             {showExpired ? "Hide" : "Show"} ({expiredCount})
           </button>
@@ -349,14 +352,14 @@ function BloodBankDashboard() {
 
         <div style={{ padding: 12 }}>
           {bankRequests.length === 0 ? (
-            <div style={{ color: '#7a9bbf' }}>No incoming requests.</div>
+            <div style={{ color: 'var(--text-secondary)' }}>No incoming requests.</div>
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {bankRequests.map(r => (
                 <li key={r.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', padding: 12, borderRadius: 10, marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div style={{ fontWeight: 700 }}>{r.hospitalName} · {r.bloodGroup} · {r.unitsRequested} units</div>
-                    <div style={{ color: '#94a3b8', fontSize: 13 }}>Requested at: {new Date(r.createdAt).toLocaleString()}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Requested at: {new Date(r.createdAt).toLocaleString()}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     {r.status === 'PENDING' ? (
@@ -384,10 +387,10 @@ function BloodBankDashboard() {
               <select value={form.bloodGroup} onChange={e => setForm(f => ({ ...f, bloodGroup: e.target.value }))}
                 style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 8, padding: "9px 12px", color: "#e2e8f0", width: "100%", fontSize: 14 }}>
                 {BLOOD_GROUPS.filter(g => g !== "All").map(g => (
-                    <option key={g} value={g} style={{ backgroundColor: "#0f172a", color: "#ffffff" }}>
-                      {g}
-                    </option>
-                  ))}
+                  <option key={g} value={g} style={{ backgroundColor: "#0f172a", color: "#ffffff" }}>
+                    {g}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="field" style={{ flex: "0 0 200px" }}>
@@ -426,28 +429,28 @@ function BloodBankDashboard() {
       {/* ── Donated Panel & Request Tester ── */}
       {showDonated && (
         <div style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 14, padding: "20px", marginBottom: 24, animation: "slideIn 0.2s ease" }}>
-          
+
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid rgba(34,197,94,0.2)", paddingBottom: 16, marginBottom: 16 }}>
             <div>
               <h3 style={{ margin: "0 0 8px", color: "#4ade80", fontSize: 16, fontWeight: 700 }}>Donated Records & Requests</h3>
               <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>Allocated blood details or test hospital request distribution here.</p>
             </div>
-            
+
             {/* Simulation Block */}
             <div style={{ display: "flex", alignItems: "flex-end", gap: 10, background: "rgba(255,255,255,0.04)", padding: "12px", borderRadius: 10 }}>
               <div>
                 <label style={{ display: "block", fontSize: 12, marginBottom: 4, color: "#7a9bbf" }}>Blood Group</label>
                 <select value={allocateForm.bloodGroup} onChange={e => setAllocateForm(f => ({ ...f, bloodGroup: e.target.value }))}
-                  style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "6px 10px", color: "#e2e8f0" }}>
+                  style={{ background: "#fff", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text-primary)" }}>
                   {BLOOD_GROUPS.filter(g => g !== "All").map(g => <option key={g} value={g}>{g}</option>)}
                 </select>
               </div>
               <div>
-                <label style={{ display: "block", fontSize: 12, marginBottom: 4, color: "#7a9bbf" }}>Req. Units</label>
+                <label style={{ display: "block", fontSize: 12, marginBottom: 4, color: "var(--text-secondary)" }}>Req. Units</label>
                 <input type="number" min="1" value={allocateForm.units} onChange={e => setAllocateForm(f => ({ ...f, units: e.target.value }))}
-                  style={{ width: 60, background: "#0f172a", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 6, padding: "6px 10px", color: "#e2e8f0", WebkitAppearance: "none", margin: 0 }} />
+                  style={{ width: 60, background: "#fff", border: "1px solid var(--border)", borderRadius: 6, padding: "6px 10px", color: "var(--text-primary)", WebkitAppearance: "none", margin: 0 }} />
               </div>
-              <button 
+              <button
                 onClick={handleAllocate} disabled={allocateLoading}
                 style={{ background: "#22c55e", color: "white", border: "none", borderRadius: 6, padding: "8px 14px", fontWeight: "bold", cursor: "pointer", fontSize: 13 }}>
                 {allocateLoading ? "Allocating..." : "Test Fulfill Request"}
@@ -482,7 +485,7 @@ function BloodBankDashboard() {
               </table>
             </div>
           )}
-        
+
           {/* Incoming Bank Requests (moved to top) */}
         </div>
       )}
@@ -561,17 +564,17 @@ function BloodBankDashboard() {
         {/* Summary bar */}
         {selectedGroup !== "All" && (
           <div style={{
-            background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)",
+            background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.1)",
             borderRadius: 10, padding: "12px 18px", marginBottom: 16,
             display: "flex", alignItems: "center", gap: 10
           }}>
             <span style={{ fontSize: 20 }}></span>
             <div>
-              <span style={{ color: "#94a3b8", fontSize: 13 }}>Total usable units for </span>
-              <span style={{ color: "#f87171", fontWeight: 700 }}>{selectedGroup}</span>
-              <span style={{ color: "#94a3b8", fontSize: 13 }}> → </span>
-              <span style={{ color: "#4ade80", fontWeight: 800, fontSize: 18 }}>{groupedUnits}</span>
-              <span style={{ color: "#94a3b8", fontSize: 13 }}> units (AVAILABLE, not expired)</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>Total usable units for </span>
+              <span style={{ color: "var(--accent-red)", fontWeight: 700 }}>{selectedGroup}</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: 13 }}> → </span>
+              <span style={{ color: "#059669", fontWeight: 800, fontSize: 18 }}>{groupedUnits}</span>
+              <span style={{ color: "var(--text-secondary)", fontSize: 13 }}> units (AVAILABLE, not expired)</span>
             </div>
           </div>
         )}
@@ -605,11 +608,11 @@ function BloodBankDashboard() {
               borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: 12,
               padding: "14px 14px 0", display: "flex", justifyContent: "flex-end", gap: 20
             }}>
-              <span style={{ color: "#7a9bbf", fontSize: 13 }}>
-                Showing <strong style={{ color: "#e2e8f0" }}>{displayed.length}</strong> packet(s)
+              <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                Showing <strong style={{ color: "var(--text-primary)" }}>{displayed.length}</strong> packet(s)
               </span>
-              <span style={{ color: "#7a9bbf", fontSize: 13 }}>
-                Total usable units: <strong style={{ color: "#4ade80", fontSize: 16 }}>{groupedUnits}</strong>
+              <span style={{ color: "var(--text-secondary)", fontSize: 13 }}>
+                Total usable units: <strong style={{ color: "#059669", fontSize: 16 }}>{groupedUnits}</strong>
               </span>
             </div>
           </div>

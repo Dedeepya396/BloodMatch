@@ -67,37 +67,39 @@ function Signup() {
                 </div>
             </div>
 
-            <div style={{ marginBottom: 12 }}>
-                <label style={{ fontSize: 12, color: '#7a9bbf' }}>Role</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 8 }}>
-                    <button className={`btn ${role === 'DONOR' ? 'btn-blue' : ''}`} onClick={() => setRole('DONOR')} type="button" style={{ width: '100%', background: role === 'DONOR' ? undefined : 'rgba(59,130,246,0.12)', color: role === 'DONOR' ? 'white' : '#60a5fa', borderColor: role === 'DONOR' ? '#3b82f6' : 'rgba(59,130,246,0.3)' }}>Donor</button>
-                    <button className={`btn ${role === 'HOSPITAL' ? 'btn-blue' : ''}`} onClick={() => setRole('HOSPITAL')} type="button" style={{ width: '100%', background: role === 'HOSPITAL' ? undefined : 'rgba(59,130,246,0.12)', color: role === 'HOSPITAL' ? 'white' : '#60a5fa', borderColor: role === 'HOSPITAL' ? '#3b82f6' : 'rgba(59,130,246,0.3)' }}>Hospital</button>
-                    <button className={`btn ${role === 'BLOOD_BANK' ? 'btn-blue' : ''}`} onClick={() => setRole('BLOOD_BANK')} type="button" style={{ width: '100%', background: role === 'BLOOD_BANK' ? undefined : 'rgba(59,130,246,0.12)', color: role === 'BLOOD_BANK' ? 'white' : '#60a5fa', borderColor: role === 'BLOOD_BANK' ? '#3b82f6' : 'rgba(59,130,246,0.3)' }}>🏦 Blood Bank</button>
+            <div className="form-grid" style={{ marginBottom: 20 }}>
+                <button className={`btn ${role === 'DONOR' ? 'btn-red' : 'btn-outline'}`} onClick={() => setRole('DONOR')} type="button" style={{ width: '100%', marginTop: 0, background: role === 'DONOR' ? undefined : '#f8fafc', color: role === 'DONOR' ? 'white' : '#475569', borderColor: role === 'DONOR' ? '#dc2626' : 'rgba(0,0,0,0.1)' }}>Donor</button>
+                <button className={`btn ${role === 'HOSPITAL' ? 'btn-red' : 'btn-outline'}`} onClick={() => setRole('HOSPITAL')} type="button" style={{ width: '100%', marginTop: 0, background: role === 'HOSPITAL' ? undefined : '#f8fafc', color: role === 'HOSPITAL' ? 'white' : '#475569', borderColor: role === 'HOSPITAL' ? '#dc2626' : 'rgba(0,0,0,0.1)' }}>Hospital</button>
+                <div className="field span-2">
+                    <button className={`btn ${role === 'BLOOD_BANK' ? 'btn-red' : 'btn-outline'}`} onClick={() => setRole('BLOOD_BANK')} type="button" style={{ width: '100%', marginTop: 0, background: role === 'BLOOD_BANK' ? undefined : '#f8fafc', color: role === 'BLOOD_BANK' ? 'white' : '#475569', borderColor: role === 'BLOOD_BANK' ? '#dc2626' : 'rgba(0,0,0,0.1)' }}>🏦 Blood Bank</button>
                 </div>
             </div>
 
-            <div className="form-grid full">
-                <div className="field">
+            <div className="form-grid">
+                <div className="field span-2">
                     <label>Full name</label>
-                    <input name="name" value={form.name} onChange={handleChange} />
+                    <input name="name" value={form.name} onChange={handleChange} placeholder="Enter your full name" />
                 </div>
-                <div className="field">
-                    <label>Email</label>
-                    <input name="email" value={form.email} onChange={handleChange} />
+                <div className="field span-2">
+                    <label>Email Address</label>
+                    <input name="email" value={form.email} onChange={handleChange} placeholder="name@example.com" />
                 </div>
                 <div className="field">
                     <label>Password</label>
-                    <input name="password" type="password" value={form.password} onChange={handleChange} />
+                    <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="••••••••" />
                 </div>
 
                 {role === 'DONOR' && (
                     <>
                         <div className="field">
                             <label>Blood Group</label>
-                            <input name="bloodGroup" value={form.bloodGroup} onChange={handleChange} placeholder="e.g. A+" />
+                            <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange}>
+                                <option value="">Select Group</option>
+                                {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                            </select>
                         </div>
-                        <div className="field">
-                            <label>Last Donation</label>
+                        <div className="field span-2">
+                            <label>Last Donation Date</label>
                             <input name="lastDonationDate" type="date" value={form.lastDonationDate} onChange={handleChange} />
                         </div>
                     </>
@@ -106,12 +108,12 @@ function Signup() {
                 {role === 'HOSPITAL' && (
                     <>
                         <div className="field">
-                            <label>Address</label>
-                            <input name="address" value={form.address} onChange={handleChange} />
-                        </div>
-                        <div className="field">
                             <label>Contact Number</label>
-                            <input name="contactNumber" value={form.contactNumber} onChange={handleChange} />
+                            <input name="contactNumber" value={form.contactNumber} onChange={handleChange} placeholder="+91 xxxxx xxxxx" />
+                        </div>
+                        <div className="field span-2">
+                            <label>Hospital Address</label>
+                            <input name="address" value={form.address} onChange={handleChange} placeholder="Street, City, Pincode" />
                         </div>
                     </>
                 )}
@@ -119,19 +121,19 @@ function Signup() {
                 {role === 'BLOOD_BANK' && (
                     <>
                         <div className="field">
-                            <label>Blood Bank Address</label>
-                            <input name="address" value={form.address} onChange={handleChange} placeholder="Full address" />
-                        </div>
-                        <div className="field">
                             <label>Contact Number</label>
-                            <input name="contactNumber" value={form.contactNumber} onChange={handleChange} />
+                            <input name="contactNumber" value={form.contactNumber} onChange={handleChange} placeholder="+91 xxxxx xxxxx" />
+                        </div>
+                        <div className="field span-2">
+                            <label>Blood Bank Address</label>
+                            <input name="address" value={form.address} onChange={handleChange} placeholder="Street, City, Pincode" />
                         </div>
                     </>
                 )}
 
                 {(role === 'DONOR' || role === 'HOSPITAL' || role === 'BLOOD_BANK') && (
-                    <div className="field span-2">
-                        <label>Select location</label>
+                    <div className="field span-2" style={{ marginTop: 8 }}>
+                        <label>Select Location on Map</label>
                         <MapPicker
                             position={form.latitude && form.longitude ? [parseFloat(form.latitude), parseFloat(form.longitude)] : null}
                             onChange={onMapChange}
@@ -140,10 +142,10 @@ function Signup() {
                 )}
             </div>
 
-            {error && <div style={{ color: '#fb7185', marginTop: 8 }}>{error}</div>}
+            {error && <div style={{ color: '#dc2626', marginTop: 16, fontWeight: 600, fontSize: '13px' }}>{error}</div>}
 
-            <button className="btn btn-blue" onClick={submit} disabled={loading}>
-                {loading ? 'Signing up…' : 'Create Account'}
+            <button className="btn btn-red" onClick={submit} disabled={loading} style={{ marginTop: 32 }}>
+                {loading ? 'Creating Account…' : 'Create Account'}
             </button>
         </div>
     );

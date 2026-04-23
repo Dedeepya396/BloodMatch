@@ -26,9 +26,10 @@ function Login() {
       else if (data.role === 'HOSPITAL') navigate('/request');
       else if (data.role === 'BLOOD_BANK') navigate('/blood-bank-dashboard');
       else navigate('/');
-    } catch (err) { 
-        console.log(err);
-        setError('Network error'); }
+    } catch (err) {
+      console.log(err);
+      setError('Network error');
+    }
     finally { setLoading(false); }
   };
 
@@ -51,10 +52,10 @@ function Login() {
                 type="button"
                 onClick={() => setForm(f => ({ ...f, role: r }))}
                 style={{
-                  flex: 1, padding: "10px", borderRadius: 8, cursor: "pointer", fontWeight: 600,
-                  background: form.role === r ? "rgba(59,130,246,0.2)" : "rgba(255,255,255,0.05)",
-                  color: form.role === r ? "#60a5fa" : "#94a3b8",
-                  border: form.role === r ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.1)",
+                  flex: 1, padding: "10px", borderRadius: 10, cursor: "pointer", fontWeight: 700, fontSize: '13px',
+                  background: form.role === r ? "rgba(220,38,38,0.1)" : "#f8fafc",
+                  color: form.role === r ? "#dc2626" : "#475569",
+                  border: form.role === r ? "1px solid #dc2626" : "1px solid rgba(0,0,0,0.06)",
                   transition: "all 0.2s"
                 }}
               >
@@ -73,7 +74,7 @@ function Login() {
         </div>
       </div>
 
-      {error && <div style={{color:'#fb7185', marginTop:8}}>{error}</div>}
+      {error && <div style={{ color: '#fb7185', marginTop: 8 }}>{error}</div>}
 
       <button className="btn btn-blue" onClick={submit} disabled={loading}>
         {loading ? 'Signing in…' : `Sign In as ${form.role.replace('_', ' ')}`}

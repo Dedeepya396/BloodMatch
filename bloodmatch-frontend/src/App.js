@@ -21,43 +21,95 @@ function Layout() {
 
   return (
     <div className="app-root">
-      <div className="bg-grid" />
-      <div className="bg-glow" />
-
       <header className="app-header">
-        <div className="logo-mark">
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <path d="M16 4C16 4 8 12 8 19a8 8 0 0016 0c0-7-8-15-8-15z" fill="url(#drop)" />
-            <defs>
-              <linearGradient id="drop" x1="8" y1="4" x2="24" y2="28" gradientUnits="userSpaceOnUse">
-                <stop stopColor="#60a5fa" />
-                <stop offset="1" stopColor="#1d4ed8" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <div>
-          <h1 className="app-title">BloodLink</h1>
-          <p className="app-subtitle">Intelligent Donor Matching System</p>
+        <div
+          onClick={() => {
+            if (!auth) window.location.href = '/';
+            else if (auth.role === 'HOSPITAL') window.location.href = '/request';
+            else if (auth.role === 'BLOOD_BANK') window.location.href = '/blood-bank-dashboard';
+            else window.location.href = '/profile';
+          }}
+          style={{ display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer' }}
+        >
+          <div className="logo-mark">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <path d="M16 4C16 4 8 12 8 19a8 8 0 0016 0c0-7-8-15-8-15z" fill="url(#drop)" />
+              <defs>
+                <linearGradient id="drop" x1="8" y1="4" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#ef4444" />
+                  <stop offset="1" stopColor="#991b1b" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div>
+            <h1 className="app-title">BloodLink</h1>
+            <p className="app-subtitle">Intelligent Donor Matching System</p>
+          </div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 12 }}>
           {!auth ? (
             <>
-              <button className={`btn ${location.pathname === '/login' ? 'btn-blue' : ''}`} onClick={() => window.location.href = '/login'} style={{ width: 'auto', padding: '8px 12px' }}>Sign In</button>
-              <button className={`btn ${location.pathname === '/signup' ? 'btn-blue' : ''}`} onClick={() => window.location.href = '/signup'} style={{ width: 'auto', padding: '8px 12px' }}>Sign Up</button>
+              <button
+                className={`btn ${location.pathname === '/login' ? 'btn-red' : 'btn-outline'}`}
+                onClick={() => window.location.href = '/login'}
+                style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+              >
+                Sign In
+              </button>
+              <button
+                className={`btn ${location.pathname === '/signup' ? 'btn-red' : 'btn-outline'}`}
+                onClick={() => window.location.href = '/signup'}
+                style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+              >
+                Sign Up
+              </button>
             </>
           ) : (
             <>
-              <button className="btn" onClick={() => window.location.href = '/profile'} style={{ width: 'auto', padding: '8px 12px' }}>Profile</button>
-              <button className="btn" onClick={logout} style={{ width: 'auto', padding: '8px 12px' }}>Sign Out</button>
+              {auth.role === 'HOSPITAL' && (
+                <button
+                  className={`btn ${location.pathname === '/request' ? 'btn-red' : 'btn-outline'}`}
+                  onClick={() => window.location.href = '/request'}
+                  style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+                >
+                  Blood Request
+                </button>
+              )}
+              {auth.role === 'BLOOD_BANK' && (
+                <button
+                  className={`btn ${location.pathname === '/blood-bank-dashboard' ? 'btn-red' : 'btn-outline'}`}
+                  onClick={() => window.location.href = '/blood-bank-dashboard'}
+                  style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+                >
+                  Dashboard
+                </button>
+              )}
+              {auth.role === 'DONOR' && (
+                <button
+                  className={`btn ${location.pathname === '/profile' && location.search.includes('donate=true') ? 'btn-red' : 'btn-outline'}`}
+                  onClick={() => window.location.href = '/profile?donate=true'}
+                  style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+                >
+                  Donate Blood
+                </button>
+              )}
+              <button
+                className={`btn ${location.pathname === '/profile' && !location.search.includes('donate=true') ? 'btn-red' : 'btn-outline'}`}
+                onClick={() => window.location.href = '/profile'}
+                style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+              >
+                Profile
+              </button>
+              <button className="btn btn-blue" onClick={logout} style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}>Sign Out</button>
             </>
           )}
         </div>
       </header>
 
-      <main className="app-main single">
+      <main className="app-main">
         <Routes>
-          <Route path="/" element={<div style={{ maxWidth: 680, margin: '0 auto' }}>
+          <Route path="/" element={<div style={{ maxWidth: 800, margin: '0 auto' }}>
             <div className="panel">
               <div className="panel-header">
                 <div className="panel-icon blue">🔐</div>

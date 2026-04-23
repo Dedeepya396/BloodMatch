@@ -21,26 +21,36 @@ function BloodRequest() {
 
   useEffect(() => {
     const auth = JSON.parse(localStorage.getItem("bm_auth"));
-    const hospitalName = auth?.name;
-    if (!hospitalName) {
-      console.log("No hospital name found");
-      return;
-    }
-    console.log("HOSPITAL NAME:", hospitalName);
-    const fetchHospitalRequests = async () => {
+    if (!auth || auth.role !== 'HOSPITAL') return;
+
+    const fetchHospitalData = async () => {
       try {
-        const r = await fetch(
-          `http://localhost:8080/api/requests/hospital/${encodeURIComponent(hospitalName)}`
+        // Fetch full hospital details to get location
+        const hospitalRes = await fetch(`http://localhost:8080/api/hospitals/by-email?email=${encodeURIComponent(auth.email)}`);
+        if (hospitalRes.ok) {
+          const data = await hospitalRes.json();
+          setRequest(prev => ({
+            ...prev,
+            hospitalName: data.name || auth.name,
+            latitude: String(data.latitude || ""),
+            longitude: String(data.longitude || ""),
+            address: data.address || ""
+          }));
+        }
+
+        // Fetch existing requests
+        const requestsRes = await fetch(
+          `http://localhost:8080/api/requests/hospital/${encodeURIComponent(auth.name)}`
         );
-        if (r.ok) {
-          setHospitalRequests(await r.json());
+        if (requestsRes.ok) {
+          setHospitalRequests(await requestsRes.json());
         }
       } catch (e) {
-        console.warn("Failed fetching hospital requests", e);
+        console.warn("Failed fetching hospital data", e);
       }
     };
 
-    fetchHospitalRequests();
+    fetchHospitalData();
   }, []);
 
   const handleSubmit = async () => {
@@ -106,6 +116,8 @@ function BloodRequest() {
             name="hospitalName"
             value={request.hospitalName}
             onChange={handleChange}
+            readOnly
+            style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
           />
         </div>
 
@@ -161,6 +173,7 @@ function BloodRequest() {
               ]
               : null
           }
+          initialAddress={request.address}
           onChange={onMapChange}
         />
       </div>
@@ -252,16 +265,17 @@ function BloodRequest() {
       {true && (
         <div
           style={{
-            marginTop: 18,
-            padding: 12,
-            border: "1px solid rgba(0,0,0,0.06)",
-            borderRadius: 8
+            marginTop: 32,
+            padding: 20,
+            border: "1px solid var(--border)",
+            borderRadius: 16,
+            background: "#f8fafc"
           }}
         >
-          <h4>Your Requests</h4>
+          <h4 style={{ margin: '0 0 16px', color: '#1e293b', fontFamily: "'Syne', sans-serif" }}>Your Requests</h4>
 
           {hospitalRequests.length === 0 ? (
-            <div style={{ color: "#666" }}>
+            <div style={{ color: "#64748b", fontSize: '13px' }}>
               No requests found for {request.hospitalName}.
             </div>
           ) : (
@@ -270,17 +284,30 @@ function BloodRequest() {
                 <li
                   key={hr.requestId}
                   style={{
-                    padding: 8,
-                    borderBottom: "1px solid rgba(0,0,0,0.04)"
+                    padding: '12px 14px',
+                    marginBottom: 8,
+                    background: 'white',
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
                   }}
                 >
-                  <div style={{ fontWeight: 700 }}>
-                    {hr.bloodGroup} · Requested:{" "}
-                    {hr.totalRequested} units
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#0f172a' }}>
+                      {hr.bloodGroup} · Requested:{" "}
+                      {hr.totalRequested} units
+                    </div>
                   </div>
-                  <div style={{ color: "#666" }}>
-                    Allocated: {hr.allocated} · Remaining:{" "}
-                    {hr.remaining}
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ color: hr.remaining === 0 ? '#059669' : '#dc2626', fontWeight: 700, fontSize: '14px' }}>
+                      {hr.allocated} / {hr.totalRequested}
+                    </div>
+                    <div style={{ color: "#64748b", fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Allocated
+                    </div>
                   </div>
                 </li>
               ))}

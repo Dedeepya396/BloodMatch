@@ -22,10 +22,10 @@ function Recenter({ center }) {
   return null;
 }
 
-export default function MapPicker({ position, onChange, placeholder = "Search place or click on map" }) {
+export default function MapPicker({ position, onChange, placeholder = "Search place or click on map", initialAddress = "" }) {
   const [center, setCenter] = useState(position || [19.07, 72.87]);
   const [markerPos, setMarkerPos] = useState(position || null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialAddress);
   const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
 
@@ -35,6 +35,12 @@ export default function MapPicker({ position, onChange, placeholder = "Search pl
       setMarkerPos(position);
     }
   }, [position]);
+
+  useEffect(() => {
+    if (initialAddress) {
+      setQuery(initialAddress);
+    }
+  }, [initialAddress]);
 
   const doSearch = (q) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
