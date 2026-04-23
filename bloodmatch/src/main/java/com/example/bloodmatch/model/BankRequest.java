@@ -12,6 +12,7 @@ public class BankRequest {
 
     private String bloodRequestId;
     private String bankId;
+    private String bankName;
     private String hospitalName;
     private String bloodGroup;
     private int unitsRequested;
@@ -21,9 +22,10 @@ public class BankRequest {
 
     public BankRequest() {}
 
-    public BankRequest(String bloodRequestId, String bankId, String hospitalName, String bloodGroup, int unitsRequested) {
+    public BankRequest(String bloodRequestId, String bankId, String bankName, String hospitalName, String bloodGroup, int unitsRequested) {
         this.bloodRequestId = bloodRequestId;
         this.bankId = bankId;
+        this.bankName = bankName;
         this.hospitalName = hospitalName;
         this.bloodGroup = bloodGroup;
         this.unitsRequested = unitsRequested;
@@ -40,6 +42,9 @@ public class BankRequest {
 
     public String getBankId() { return bankId; }
     public void setBankId(String bankId) { this.bankId = bankId; }
+
+    public String getBankName() { return bankName; }
+    public void setBankName(String bankName) { this.bankName = bankName; }
 
     public String getHospitalName() { return hospitalName; }
     public void setHospitalName(String hospitalName) { this.hospitalName = hospitalName; }

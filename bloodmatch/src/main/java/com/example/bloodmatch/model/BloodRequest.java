@@ -12,6 +12,8 @@ public class BloodRequest {
     private String id;
 
     private String hospitalName;
+    private String hospitalId;
+    private String status; // PENDING, PARTIALLY_FULFILLED, FULFILLED
 
     private String bloodGroupRequired;
     private int unitsRequired;
@@ -24,6 +26,7 @@ public class BloodRequest {
     private LocalDateTime createdAt;
 
     public BloodRequest() {
+        this.status = "PENDING";
     }
 
     public BloodRequest(String hospitalName, String bloodGroupRequired,
@@ -35,6 +38,7 @@ public class BloodRequest {
         this.latitude = latitude;
         this.longitude = longitude;
         this.urgency = urgency;
+        this.status = "PENDING";
         this.createdAt = LocalDateTime.now();
     }
 
@@ -52,6 +56,22 @@ public class BloodRequest {
 
     public void setHospitalName(String hospitalName) {
         this.hospitalName = hospitalName;
+    }
+    
+    public String getHospitalId() {
+        return hospitalId;
+    }
+
+    public void setHospitalId(String hospitalId) {
+        this.hospitalId = hospitalId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public String getBloodGroupRequired() {

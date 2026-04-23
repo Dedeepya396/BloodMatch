@@ -6,6 +6,8 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import Profile from "./components/Profile";
 import BloodBankDashboard from "./components/BloodBankDashboard";
+import HospitalPendingRequests from "./components/HospitalPendingRequests";
+import HospitalAcceptedRequests from "./components/HospitalAcceptedRequests";
 // removed ProtectedRoute - simplified auth flow
 import "./index.css";
 function Layout() {
@@ -68,13 +70,29 @@ function Layout() {
           ) : (
             <>
               {auth.role === 'HOSPITAL' && (
-                <button
-                  className={`btn ${location.pathname === '/request' ? 'btn-red' : 'btn-outline'}`}
-                  onClick={() => window.location.href = '/request'}
-                  style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
-                >
-                  Blood Request
-                </button>
+                <>
+                  <button
+                    className={`btn ${location.pathname === '/request' ? 'btn-red' : 'btn-outline'}`}
+                    onClick={() => window.location.href = '/request'}
+                    style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+                  >
+                    Blood Request
+                  </button>
+                  <button
+                    className={`btn ${location.pathname === '/pending-requests' ? 'btn-red' : 'btn-outline'}`}
+                    onClick={() => window.location.href = '/pending-requests'}
+                    style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    className={`btn ${location.pathname === '/accepted-requests' ? 'btn-red' : 'btn-outline'}`}
+                    onClick={() => window.location.href = '/accepted-requests'}
+                    style={{ width: 'auto', padding: '8px 16px', marginTop: 0 }}
+                  >
+                    Accepted
+                  </button>
+                </>
               )}
               {auth.role === 'BLOOD_BANK' && (
                 <button
@@ -129,6 +147,8 @@ function Layout() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/blood-bank-dashboard" element={<BloodBankDashboard />} />
+          <Route path="/pending-requests" element={<HospitalPendingRequests />} />
+          <Route path="/accepted-requests" element={<HospitalAcceptedRequests />} />
         </Routes>
       </main>
     </div>

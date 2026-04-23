@@ -519,7 +519,7 @@ function BloodBankDashboard() {
                       <td style={{ padding: "9px 14px" }}>
                         <button onClick={() => { if (window.confirm("Are you sure you want to permanently remove this packet from the database?")) handleAction(p.id, "delete") }}
                           style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid #ef4444", borderRadius: 6, padding: "5px 14px", cursor: "pointer", fontWeight: 600, fontSize: 12 }}>
-                          🗑 Remove
+                          Remove
                         </button>
                       </td>
                     </tr>

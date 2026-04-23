@@ -10,4 +10,5 @@ import java.util.List;
 public interface BankRequestRepository extends MongoRepository<BankRequest, String> {
     List<BankRequest> findByBankIdAndStatus(String bankId, String status);
     List<BankRequest> findByBloodRequestId(String bloodRequestId);
+    List<BankRequest> findByHospitalName(String hospitalName);
 }

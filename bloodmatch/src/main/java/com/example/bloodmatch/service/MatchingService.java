@@ -6,6 +6,7 @@ import com.example.bloodmatch.model.BloodRequest;
 import com.example.bloodmatch.model.Donor;
 import com.example.bloodmatch.observer.DonorNotifier;
 import com.example.bloodmatch.repository.DonorRepository;
+import com.example.bloodmatch.repository.BloodRequestRepository;
 import com.example.bloodmatch.service.BloodBankService;
 import com.example.bloodmatch.model.BloodBank;
 import com.example.bloodmatch.model.BloodPacket;
@@ -27,14 +28,17 @@ public class MatchingService {
     private final DonorNotifier donorNotifier;
         private final BloodBankService bloodBankService;
         private final BankRequestService bankRequestService;
+        private final BloodRequestRepository bloodRequestRepository;
     private static final Logger logger = LoggerFactory.getLogger(MatchingService.class);
 
         public MatchingService(DonorRepository donorRepository, DonorNotifier donorNotifier,
-                        BloodBankService bloodBankService, BankRequestService bankRequestService) {
+                        BloodBankService bloodBankService, BankRequestService bankRequestService,
+                        BloodRequestRepository bloodRequestRepository) {
                 this.donorRepository = donorRepository;
                 this.donorNotifier = donorNotifier;
                 this.bloodBankService = bloodBankService;
                 this.bankRequestService = bankRequestService;
+                this.bloodRequestRepository = bloodRequestRepository;
         }
 
     public List<MatchResponse> findMatches(BloodRequest request) {
@@ -47,10 +51,19 @@ public class MatchingService {
         logger.debug("Selected matching strategy: {}", strategy.getClass().getSimpleName());
 
         // Only consider blood banks when urgency is HIGH.
+        String reqGroup = request.getBloodGroupRequired();
         double reqLat = request.getLatitude();
         double reqLon = request.getLongitude();
-        String reqGroup = request.getBloodGroupRequired();
-        List<BloodBank> allBanks = bloodBankService.getAllBloodBanks();
+        
+        // Get already requested bank IDs to exclude them from retry search
+        List<String> excludedBankIds = bankRequestService.findByBloodRequestId(request.getId())
+                .stream()
+                .map(br -> br.getBankId())
+                .collect(Collectors.toList());
+
+        List<BloodBank> allBanks = bloodBankService.getAllBloodBanks().stream()
+                .filter(b -> !excludedBankIds.contains(b.getId()))
+                .collect(Collectors.toList());
         List<MatchResponse> bankMatches;
         logger.info("TOTAL BANKS FOUND = {}", allBanks.size());
         if ("HIGH".equalsIgnoreCase(request.getUrgency())) {
@@ -217,5 +230,17 @@ public class MatchingService {
                 .collect(Collectors.toList());
 
         return donorResponses;
+    }
+
+    public void retryMatchingForRequest(String bloodRequestId) {
+        bloodRequestRepository.findById(bloodRequestId).ifPresent(request -> {
+            logger.info("Retrying matching for blood request: {}", bloodRequestId);
+            List<MatchResponse> matches = findMatches(request);
+            if (matches.isEmpty()) {
+                logger.warn("No further matches found for request: {}", bloodRequestId);
+            } else {
+                logger.info("Found {} new matches for request: {}", matches.size(), bloodRequestId);
+            }
+        });
     }
 }

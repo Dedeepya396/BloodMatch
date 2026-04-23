@@ -8,13 +8,16 @@ function BloodRequest() {
     unitsRequired: "",
     latitude: "",
     longitude: "",
-    urgency: ""
+    urgency: "",
+    hospitalId: ""
   });
 
   const [matches, setMatches] = useState([]);
   const [hospitalRequests, setHospitalRequests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   const handleChange = (e) =>
     setRequest({ ...request, [e.target.name]: e.target.value });
@@ -34,7 +37,8 @@ function BloodRequest() {
             hospitalName: data.name || auth.name,
             latitude: String(data.latitude || ""),
             longitude: String(data.longitude || ""),
-            address: data.address || ""
+            address: data.address || "",
+            hospitalId: data.id || ""
           }));
         }
 
@@ -184,152 +188,119 @@ function BloodRequest() {
           onClick={handleSubmit}
           disabled={loading}
         >
-          {loading ? "⏳ Searching donors…" : "🔍 Find Matching Donors"}
+          {loading ? "Searching sources…" : "Search for Blood Sources"}
         </button>
       </div>
 
       {(searched || matches.length > 0) && (
         <>
           <div className="matches-header">
-            Matched Donors
+            Matched Results
             <span className="match-count">{matches.length} found</span>
           </div>
 
+          {"HIGH" === request.urgency && matches.length > 0 && matches[0].type === "DONOR" && (
+            <div className="emergency-alert">
+              <div>
+                No blood banks has compatible blood. Emergency notification sent to all eligible donors who are in 20km radius.
+              </div>
+            </div>
+          )}
+
+          {matches.length > 0 && matches[0].type === "BANK" && (
+            <div className="success-alert" style={{
+              background: '#ecfdf5',
+              border: '1px solid #6ee7b7',
+              color: '#065f46',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '20px',
+              fontWeight: 600,
+              fontSize: '14px'
+            }}>
+              We requested blood to all these sources.
+            </div>
+          )}
+
           {matches.length === 0 ? (
             <div className="empty-state">
-              No matching donors found nearby.
+              No matching results found nearby.
               <br />
               Try expanding the search radius or checking blood group.
             </div>
           ) : (
-            <ul className="matches-list">
-              {matches.map((m, index) => {
-                // Determine card variant class
-                let itemClass = "match-item";
-                if (m.type === "BANK") {
-                  itemClass += " bank";
-                } else if (m.exactMatch === true) {
-                  itemClass += " exact";
-                } else {
-                  itemClass += " compatible";
-                }
-
-                return (
-                  <li
-                    className={itemClass}
+            <>
+              <div className="matches-grid">
+                {matches.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((m, index) => (
+                  <div
+                    className="match-card"
                     key={index}
                     style={{ animationDelay: `${index * 0.05}s` }}
                   >
-                    {m.type === "BANK" ? (
-                      <>
-                        <div>
-                          <div className="match-name">
-                            {m.name}
-                            <span className="bank-badge">🏦 Blood Bank</span>
-                          </div>
-                          <div className="match-meta">
-                            {m.distanceKm != null
-                              ? `${m.distanceKm.toFixed(1)} km away`
-                              : "Distance unknown"}
-                            {m.availableUnits != null &&
-                              ` · ${m.availableUnits} units available`}
-                            {m.contactNumber &&
-                              ` · ${m.contactNumber}`}
-                          </div>
+                    <div className="match-card-header">
+                      <div className="match-card-name">
+                        {m.type === "BANK" ? "🏦 " : "👤 "}
+                        {m.name}
+                        {m.type === "BANK" && <span className="bank-badge">Bank</span>}
+                      </div>
+                      <span className="blood-badge">{m.bloodGroup}</span>
+                    </div>
+
+                    <div className="match-card-meta">
+                      <div className="match-card-info">
+                        📍 {m.distanceKm != null
+                          ? `${m.distanceKm.toFixed(1)} km away`
+                          : "Distance unknown"}
+                      </div>
+                      {m.type === "BANK" ? (
+                        <div className="match-card-info">
+                          📦 {m.availableUnits != null ? `${m.availableUnits} units available` : "Units unknown"}
                         </div>
-                        <span className="blood-badge">{m.bloodGroup}</span>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <div className="match-name">
-                            {m.donor.name}
-                            {/* Match type pill — prominent, inline with name */}
-                            {m.exactMatch === true ? (
-                              <span className="match-type-badge exact">
-                                ✅ Exact Match
-                              </span>
-                            ) : (
-                              <span className="match-type-badge compatible">
-                                🔄 Compatible Match
-                              </span>
-                            )}
-                          </div>
-                          <div className="match-meta">
-                            {m.distanceKm != null
-                              ? `${m.distanceKm.toFixed(1)} km away`
-                              : "Distance unknown"}
-                            {m.donor.available !== undefined &&
-                              ` · ${m.donor.available ? "Available" : "Unavailable"}`}
-                          </div>
+                      ) : (
+                        <div className="match-card-info">
+                          🕒 {m.donor?.available ? "Available Now" : "Unavailable"}
+                          {m.exactMatch && <span className="exact-badge" style={{ marginLeft: 8 }}>Exact Match</span>}
                         </div>
-                        <span className="blood-badge">
-                          {m.donor.bloodGroup}
-                        </span>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+                      )}
+                      {m.contactNumber && (
+                        <div className="match-card-info">
+                          📞 {m.contactNumber}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {matches.length > pageSize && (
+                <div className="pagination">
+                  {[...Array(Math.ceil(matches.length / pageSize))].map((_, i) => (
+                    <button
+                      key={i + 1}
+                      className={`page-num ${currentPage === i + 1 ? 'active' : ''}`}
+                      onClick={() => setCurrentPage(i + 1)}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+
           )}
         </>
       )}
 
-      {/* Hospital Requests */}
-      {true && (
-        <div
-          style={{
-            marginTop: 32,
-            padding: 20,
-            border: "1px solid var(--border)",
-            borderRadius: 16,
-            background: "#f8fafc"
-          }}
-        >
-          <h4 style={{ margin: '0 0 16px', color: '#1e293b', fontFamily: "'Syne', sans-serif" }}>Your Requests</h4>
-
-          {hospitalRequests.length === 0 ? (
-            <div style={{ color: "#64748b", fontSize: '13px' }}>
-              No requests found for {request.hospitalName}.
-            </div>
-          ) : (
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {hospitalRequests.map((hr) => (
-                <li
-                  key={hr.requestId}
-                  style={{
-                    padding: '12px 14px',
-                    marginBottom: 8,
-                    background: 'white',
-                    border: '1px solid var(--border)',
-                    borderRadius: 10,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
-                  }}
-                >
-                  <div>
-                    <div style={{ fontWeight: 700, color: '#0f172a' }}>
-                      {hr.bloodGroup} · Requested:{" "}
-                      {hr.totalRequested} units
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ color: hr.remaining === 0 ? '#059669' : '#dc2626', fontWeight: 700, fontSize: '14px' }}>
-                      {hr.allocated} / {hr.totalRequested}
-                    </div>
-                    <div style={{ color: "#64748b", fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Allocated
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+      {/* Quick Links for Hospital */}
+      <div className="divider" />
+      <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+        <button className="btn btn-outline" onClick={() => window.location.href = '/pending-requests'}>
+          View Pending Requests
+        </button>
+        <button className="btn btn-outline" onClick={() => window.location.href = '/accepted-requests'}>
+          View Accepted Requests
+        </button>
+      </div>
     </div>
   );
 }
