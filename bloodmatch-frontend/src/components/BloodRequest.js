@@ -19,42 +19,54 @@ function BloodRequest() {
   const handleChange = (e) =>
     setRequest({ ...request, [e.target.name]: e.target.value });
 
-useEffect(() => {
+  useEffect(() => {
     const auth = JSON.parse(localStorage.getItem("bm_auth"));
     const hospitalName = auth?.name;
-  if (!hospitalName) {
-    console.log("No hospital name found");
-    return;
-  }
-  console.log("HOSPITAL NAME:",hospitalName);
-  const fetchHospitalRequests = async () => {
-    try {
-      const r = await fetch(
-        `http://localhost:8080/api/requests/hospital/${encodeURIComponent(hospitalName)}`
-      );
-      if (r.ok) {
-        setHospitalRequests(await r.json());
-      }
-    } catch (e) {
-      console.warn("Failed fetching hospital requests", e);
+    if (!hospitalName) {
+      console.log("No hospital name found");
+      return;
     }
-  };
+    console.log("HOSPITAL NAME:", hospitalName);
+    const fetchHospitalRequests = async () => {
+      try {
+        const r = await fetch(
+          `http://localhost:8080/api/requests/hospital/${encodeURIComponent(hospitalName)}`
+        );
+        if (r.ok) {
+          setHospitalRequests(await r.json());
+        }
+      } catch (e) {
+        console.warn("Failed fetching hospital requests", e);
+      }
+    };
 
-  fetchHospitalRequests();
-}, []);
+    fetchHospitalRequests();
+  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
     setSearched(false);
     try {
+      // Ensure numeric fields are sent as numbers, not strings
+      const payload = {
+        ...request,
+        unitsRequired: Number(request.unitsRequired) || 0,
+        latitude: parseFloat(request.latitude) || 0,
+        longitude: parseFloat(request.longitude) || 0,
+      };
+
       const res = await fetch("http://localhost:8080/api/requests/match", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(request)
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
-      setMatches(data);
+      // Guard: backend might return an error object instead of an array
+      setMatches(Array.isArray(data) ? data : []);
+      if (!Array.isArray(data)) {
+        console.error("Unexpected response from /api/requests/match:", data);
+      }
     } catch (err) {
       console.error(err);
       setMatches([]);
@@ -144,9 +156,9 @@ useEffect(() => {
           position={
             request.latitude && request.longitude
               ? [
-                  parseFloat(request.latitude),
-                  parseFloat(request.longitude)
-                ]
+                parseFloat(request.latitude),
+                parseFloat(request.longitude)
+              ]
               : null
           }
           onChange={onMapChange}
@@ -212,10 +224,9 @@ useEffect(() => {
                             ? `${m.distanceKm.toFixed(1)} km away`
                             : "Distance unknown"}
                           {m.donor.available !== undefined &&
-                            ` · ${
-                              m.donor.available
-                                ? "Available"
-                                : "Unavailable"
+                            ` · ${m.donor.available
+                              ? "Available"
+                              : "Unavailable"
                             }`}
                           {m.exactMatch && (
                             <span className="exact-badge">
