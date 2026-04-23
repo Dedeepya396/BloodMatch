@@ -10,9 +10,12 @@ import com.example.bloodmatch.service.BloodBankService;
 import com.example.bloodmatch.model.BloodBank;
 import com.example.bloodmatch.model.BloodPacket;
 import com.example.bloodmatch.service.BankRequestService;
-import com.example.bloodmatch.strategy.CompatibilityFirstStrategy;
+import com.example.bloodmatch.strategy.ExactMatchStrategy;
 import com.example.bloodmatch.strategy.MatchingStrategy;
 import com.example.bloodmatch.strategy.SmartMatchingStrategy;
+import com.example.bloodmatch.strategy.BankMatchingStrategy;
+import com.example.bloodmatch.strategy.ExactBankStrategy;
+import com.example.bloodmatch.strategy.BankSmartStrategy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -43,7 +46,7 @@ public class MatchingService {
 
         MatchingStrategy strategy = "HIGH".equalsIgnoreCase(request.getUrgency())
                 ? new SmartMatchingStrategy()
-                : new CompatibilityFirstStrategy();
+                : new ExactMatchStrategy();
         logger.debug("Selected matching strategy: {}", strategy.getClass().getSimpleName());
 
         // Only consider blood banks when urgency is HIGH.
@@ -53,82 +56,13 @@ public class MatchingService {
         List<BloodBank> allBanks = bloodBankService.getAllBloodBanks();
         List<MatchResponse> bankMatches;
         logger.info("TOTAL BANKS FOUND = {}", allBanks.size());
-        if ("HIGH".equalsIgnoreCase(request.getUrgency())) {
+        BankMatchingStrategy bankStrategy = "HIGH".equalsIgnoreCase(request.getUrgency())
+                ? new BankSmartStrategy()
+                : new ExactBankStrategy();
 
-            // HIGH urgency → 20km restriction
-            bankMatches = allBanks.stream()
-                    .filter(bb -> {
-                        double dist = com.example.bloodmatch.util.DistanceUtil.calculate(
-                                bb.getLatitude(), bb.getLongitude(), reqLat, reqLon);
-
-                        if (dist > 20.0)
-                            return false;
-
-                        List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bb.getId(), reqGroup);
-
-                        return packets.stream()
-                                .anyMatch(p -> "AVAILABLE".equals(p.getStatus()) && p.getUnits() > 0);
-                    })
-                    .map(bb -> {
-                        double distance = com.example.bloodmatch.util.DistanceUtil.calculate(
-                                bb.getLatitude(), bb.getLongitude(), reqLat, reqLon);
-
-                        List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bb.getId(), reqGroup);
-
-                        int available = packets.stream()
-                                .filter(p -> "AVAILABLE".equals(p.getStatus()))
-                                .mapToInt(BloodPacket::getUnits)
-                                .sum();
-
-                        return new MatchResponse(
-                                bb.getId(),
-                                bb.getName(),
-                                reqGroup,
-                                bb.getLatitude(),
-                                bb.getLongitude(),
-                                distance,
-                                available,
-                                bb.getContactNumber());
-                    })
-                    .collect(Collectors.toList());
-
-        } else {
-
-            // LOW urgency → NO 20km restriction
-            bankMatches = allBanks.stream()
-                    .filter(bb -> {
-
-                        List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bb.getId(), reqGroup);
-
-                        return packets.stream()
-                                .anyMatch(p -> "AVAILABLE".equals(p.getStatus()) && p.getUnits() > 0);
-                    })
-                    .map(bb -> {
-
-                        double distance = com.example.bloodmatch.util.DistanceUtil.calculate(
-                                bb.getLatitude(), bb.getLongitude(), reqLat, reqLon);
-
-                        List<BloodPacket> packets = bloodBankService.getPacketsByGroup(bb.getId(), reqGroup);
-
-                        int available = packets.stream()
-                                .filter(p -> "AVAILABLE".equals(p.getStatus()))
-                                .mapToInt(BloodPacket::getUnits)
-                                .sum();
-
-                        return new MatchResponse(
-                                bb.getId(),
-                                bb.getName(),
-                                reqGroup,
-                                bb.getLatitude(),
-                                bb.getLongitude(),
-                                distance,
-                                available,
-                                bb.getContactNumber());
-                    })
-                                        .collect(Collectors.toList());
-            logger.info("Matched banks are {}", bankMatches.size());
-
-        }
+        boolean applyDistanceFilter = "HIGH".equalsIgnoreCase(request.getUrgency());
+        bankMatches = bankStrategy.matchBanks(allBanks, request, applyDistanceFilter, bloodBankService);
+        logger.info("Matched banks are {}", bankMatches.size());
                 if (!bankMatches.isEmpty()) {
                         int requiredUnits = request.getUnitsRequired();
 
