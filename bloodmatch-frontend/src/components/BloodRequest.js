@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import MapPicker from "./MapPicker";
 
 function BloodRequest() {
   const [request, setRequest] = useState({
@@ -92,14 +91,6 @@ function BloodRequest() {
 
   const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-  const onMapChange = ({ lat, lng, display_name }) => {
-    setRequest((prev) => ({
-      ...prev,
-      latitude: String(lat),
-      longitude: String(lng),
-      address: display_name || prev.address
-    }));
-  };
 
   return (
     <div className="panel">
@@ -162,24 +153,17 @@ function BloodRequest() {
             <option value="LOW">🟡 Low</option>
           </select>
         </div>
-      </div>
+        <div className="divider" />
 
-      <div className="divider" />
-
-      <div className="field span-2">
-        <label>Select location</label>
-        <MapPicker
-          position={
-            request.latitude && request.longitude
-              ? [
-                parseFloat(request.latitude),
-                parseFloat(request.longitude)
-              ]
-              : null
-          }
-          initialAddress={request.address}
-          onChange={onMapChange}
-        />
+        <div className="field span-2">
+          <label>Hospital Location (Auto-detected)</label>
+          <input
+            name="address"
+            value={request.address || ""}
+            readOnly
+            style={{ background: '#f1f5f9', cursor: 'not-allowed' }}
+          />
+        </div>
       </div>
 
       <div style={{ marginTop: 12 }}>
@@ -199,7 +183,7 @@ function BloodRequest() {
             <span className="match-count">{matches.length} found</span>
           </div>
 
-          {"HIGH" === request.urgency && matches.length > 0 && matches[0].type === "DONOR" && (
+          {(request.urgency === "HIGH" || request.urgency === "LOW") && matches.length > 0 && matches[0].type === "DONOR" && (
             <div className="emergency-alert">
               <div>
                 No blood banks has compatible blood. Emergency notification sent to all eligible donors who are in 20km radius.

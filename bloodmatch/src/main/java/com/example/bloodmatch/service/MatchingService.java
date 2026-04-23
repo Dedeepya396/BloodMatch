@@ -193,14 +193,13 @@ public class MatchingService {
 
         // For HIGH urgency — only donors within 20km. For LOW urgency — consider all
         // donors.
-        if ("HIGH".equalsIgnoreCase(request.getUrgency())) {
-            final double MAX_KM = 20.0;
-            donors = donors.stream()
-                    .filter(d -> com.example.bloodmatch.util.DistanceUtil.calculate(
-                            d.getLatitude(), d.getLongitude(), reqLat, reqLon) <= MAX_KM)
-                    .collect(Collectors.toList());
-            logger.debug("Filtered donors to {} within {} km for HIGH urgency", donors.size(), MAX_KM);
-        }
+        // Always restrict donors to 20km radius when falling back from blood banks
+        final double MAX_KM = 20.0;
+        donors = donors.stream()
+                .filter(d -> com.example.bloodmatch.util.DistanceUtil.calculate(
+                        d.getLatitude(), d.getLongitude(), reqLat, reqLon) <= MAX_KM)
+                .collect(Collectors.toList());
+        logger.info("Filtered donors to {} within {} km for {} urgency fallback", donors.size(), MAX_KM, request.getUrgency());
 
         List<DonorResponse> matched = strategy.match(donors, request);
 
